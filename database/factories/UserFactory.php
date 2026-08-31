@@ -2,44 +2,37 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
+use App\Enums\CategoriaProfissional;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * @extends Factory<User>
+ * @extends Factory<\App\Models\User>
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'nome' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => static::$password ??= Hash::make('senha123'),
+            'matricula' => fake()->unique()->numerify('MAT-#####'),
+            'registro_conselho' => null,
+            'categoria_profissional' => fake()->randomElement(CategoriaProfissional::cases()),
+            'cargo' => fake()->randomElement(['Assistencial', 'Plantonista', 'Coordenador(a)', 'Supervisor(a)']),
+            'telefone' => fake()->numerify('(19) 9####-####'),
+            'ativo' => true,
             'remember_token' => Str::random(10),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
+    public function inativo(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
+        return $this->state(fn () => ['ativo' => false]);
     }
 }

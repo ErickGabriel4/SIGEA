@@ -4,21 +4,34 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Tabela de usuários do SIGEA (Quadro A.1) + tabelas de sessão e recuperação de senha.
+ * A FK de setor_id é adicionada na migration de setores (dependência circular users ↔ setores).
+ */
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
+            $table->string('nome', 150);
+            $table->string('email', 150)->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('matricula', 30)->nullable()->unique();
+            $table->string('registro_conselho', 30)->nullable();
+            $table->enum('categoria_profissional', [
+                'medico', 'enfermeiro', 'tecnico_enfermagem', 'farmaceutico',
+                'fisioterapeuta', 'nutricionista', 'psicologo', 'administrativo', 'outro',
+            ])->default('outro');
+            $table->string('cargo', 100)->nullable();
+            $table->unsignedBigInteger('setor_id')->nullable()->index();
+            $table->string('telefone', 20)->nullable();
+            $table->boolean('ativo')->default(true)->index();
+            $table->timestamp('ultimo_acesso_em')->nullable();
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -37,13 +50,10 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
     }
 };
