@@ -1,58 +1,77 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SIGEA — Sistema Integrado de Gestão de Eventos Adversos
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Plataforma web para registro, classificação, investigação e análise de eventos adversos
+hospitalares — ferramenta de apoio à segurança do paciente.
 
-## About Laravel
+> Artefato tecnológico do TCC **"Sistema Web para Gestão de Eventos Adversos: Ferramenta de
+> Apoio à Segurança do Paciente"** — Tecnologia em Análise e Desenvolvimento de Sistemas,
+> IFSP Câmpus Campinas. Autor: Érick Gabriel Pereira Batista · Orientador: Prof. Ms. Emilio
+> Carlos Rodrigues.
+>
+> ⚠️ **O sistema opera exclusivamente com dados simulados.** Nenhum dado real de paciente é
+> armazenado.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Requisitos de ambiente
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Ferramenta | Versão mínima | Observação |
+|---|---|---|
+| PHP | 8.3 | com extensões `pdo_mysql`, `mbstring`, `gd`, `zip`, `xml` |
+| Composer | 2.x | |
+| Node.js / npm | 18+ | apenas para compilar os assets (Vite) |
+| MySQL | 8.x | engine InnoDB (já forçada pelo projeto) |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+> **WAMP:** o projeto funciona com o MySQL do WAMP (`wampmysqld64`). Garanta que o serviço
+> esteja iniciado antes dos passos abaixo.
 
-## Learning Laravel
+## Execução passo a passo
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### 1. Instalar as dependências
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+npm install && npm run build
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Configurar o ambiente
 
-## Contributing
+```bash
+# Windows (PowerShell/CMD):
+copy .env.example .env
+# Linux/macOS:
+# cp .env.example .env
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+php artisan key:generate
+```
 
-## Code of Conduct
+### 3. Criar o banco de dados
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```sql
+CREATE DATABASE sigea CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
-## Security Vulnerabilities
+### 4. Migrar o banco
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan migrate
+```
 
-## License
+### 5. Subir a aplicação
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan serve
+```
+
+Acesse **http://localhost:8000**.
+
+## Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Linguagem / Framework | PHP 8.3+ · Laravel 13 (MVC) |
+| Banco de dados | MySQL 8 (InnoDB, utf8mb4) · Eloquent + Migrations |
+| Interface | Blade · Vite |
+| Testes | PHPUnit |
+
+## Licença
+
+Projeto acadêmico de código aberto (MIT), desenvolvido para fins de pesquisa e ensino.
