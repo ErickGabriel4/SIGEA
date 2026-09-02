@@ -13,6 +13,12 @@ class AutenticacaoTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->semearPerfis();
+    }
+
     public function test_tela_de_login_e_exibida(): void
     {
         $this->get('/login')
@@ -22,20 +28,20 @@ class AutenticacaoTest extends TestCase
 
     public function test_login_valido_redireciona_para_o_painel(): void
     {
-        $usuario = User::factory()->create(['password' => 'senha123']);
+        $gestor = $this->criarGestor(['password' => 'senha123']);
 
         $resposta = $this->post('/login', [
-            'email' => $usuario->email,
+            'email' => $gestor->email,
             'password' => 'senha123',
         ]);
 
         $resposta->assertRedirect(route('painel.index', absolute: false));
-        $this->assertAuthenticatedAs($usuario);
+        $this->assertAuthenticatedAs($gestor);
     }
 
     public function test_login_invalido_exibe_mensagem_generica(): void
     {
-        $usuario = User::factory()->create(['password' => 'senha123']);
+        $usuario = $this->criarNotificador(['password' => 'senha123']);
 
         $resposta = $this->from('/login')->post('/login', [
             'email' => $usuario->email,
@@ -66,7 +72,7 @@ class AutenticacaoTest extends TestCase
 
     public function test_logout_encerra_a_sessao(): void
     {
-        $usuario = User::factory()->create();
+        $usuario = $this->criarNotificador();
 
         $this->actingAs($usuario)->post('/logout')->assertRedirect('/');
 
@@ -80,10 +86,10 @@ class AutenticacaoTest extends TestCase
 
     public function test_ultimo_acesso_e_registrado_na_navegacao(): void
     {
-        $usuario = User::factory()->create(['ultimo_acesso_em' => null]);
+        $gestor = $this->criarGestor(['ultimo_acesso_em' => null]);
 
-        $this->actingAs($usuario)->get('/painel')->assertOk();
+        $this->actingAs($gestor)->get('/painel')->assertOk();
 
-        $this->assertNotNull($usuario->fresh()->ultimo_acesso_em);
+        $this->assertNotNull($gestor->fresh()->ultimo_acesso_em);
     }
 }

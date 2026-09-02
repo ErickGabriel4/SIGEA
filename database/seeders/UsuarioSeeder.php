@@ -7,8 +7,8 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 
 /**
- * Usuários fixos de demonstração (Seção 10). Os perfis de acesso (RBAC)
- * são atribuídos em iteração posterior.
+ * 30 usuários simulados: 24 notificadores, 4 gestores, 2 administradores,
+ * incluindo os 3 usuários fixos de demonstração (Seção 10).
  */
 class UsuarioSeeder extends Seeder
 {
@@ -16,7 +16,8 @@ class UsuarioSeeder extends Seeder
     {
         $setores = Setor::pluck('id');
 
-        User::firstOrCreate(
+        // ── Usuários fixos de demonstração ─────────────────────────────
+        $admin = User::firstOrCreate(
             ['email' => 'admin@sigea.local'],
             [
                 'nome' => 'Administrador de Demonstração',
@@ -27,8 +28,9 @@ class UsuarioSeeder extends Seeder
                 'ativo' => true,
             ]
         );
+        $admin->syncRoles(['administrador']);
 
-        User::firstOrCreate(
+        $gestor = User::firstOrCreate(
             ['email' => 'gestor@sigea.local'],
             [
                 'nome' => 'Gestora de Segurança de Demonstração',
@@ -40,8 +42,9 @@ class UsuarioSeeder extends Seeder
                 'ativo' => true,
             ]
         );
+        $gestor->syncRoles(['gestor_seguranca']);
 
-        User::firstOrCreate(
+        $notificador = User::firstOrCreate(
             ['email' => 'notificador@sigea.local'],
             [
                 'nome' => 'Notificador de Demonstração',
@@ -53,5 +56,22 @@ class UsuarioSeeder extends Seeder
                 'ativo' => true,
             ]
         );
+        $notificador->syncRoles(['notificador']);
+
+        // ── Massa complementar: 23 notificadores, 3 gestores, 1 admin ──
+        User::factory(23)->create()->each(function (User $usuario) use ($setores) {
+            $usuario->update(['setor_id' => $setores->random()]);
+            $usuario->syncRoles(['notificador']);
+        });
+
+        User::factory(3)->create()->each(function (User $usuario) use ($setores) {
+            $usuario->update(['setor_id' => $setores->random(), 'categoria_profissional' => 'enfermeiro']);
+            $usuario->syncRoles(['gestor_seguranca']);
+        });
+
+        User::factory(1)->create()->each(function (User $usuario) use ($setores) {
+            $usuario->update(['setor_id' => $setores->random(), 'categoria_profissional' => 'administrativo']);
+            $usuario->syncRoles(['administrador']);
+        });
     }
 }

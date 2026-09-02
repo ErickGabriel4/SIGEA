@@ -310,6 +310,7 @@ return [
             'text' => 'Painel',
             'route' => 'painel.index',
             'icon' => 'fas fa-fw fa-chart-line',
+            'can' => 'dashboard.ver',
         ],
     ],
 

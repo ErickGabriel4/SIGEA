@@ -5,7 +5,8 @@ use Illuminate\Support\Facades\Route;
 
 /*
  * Mapa de rotas do SIGEA (Seção 7 do plano de desenvolvimento).
- * Negação por padrão: toda rota autenticada exige autenticação explícita.
+ * Negação por padrão: toda rota autenticada exige permissão explícita
+ * (spatie/laravel-permission) ou Policy.
  */
 
 // Raiz: convidado → login; autenticado → painel
@@ -16,8 +17,10 @@ Route::get('/', function () {
 });
 
 Route::middleware('auth')->group(function () {
-    // ── Painel (T02) ───────────────────────────────────────────────────
-    Route::get('painel', [DashboardController::class, 'index'])->name('painel.index');
+    // ── Painel (T02) — permission:dashboard.ver ────────────────────────
+    Route::middleware('permission:dashboard.ver')->prefix('painel')->name('painel.')->group(function () {
+        Route::get('/', [DashboardController::class, 'index'])->name('index');
+    });
 });
 
 require __DIR__ . '/auth.php';
