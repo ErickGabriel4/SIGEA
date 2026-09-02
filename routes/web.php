@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\SetorController;
+use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +22,16 @@ Route::middleware('auth')->group(function () {
     // ── Painel (T02) — permission:dashboard.ver ────────────────────────
     Route::middleware('permission:dashboard.ver')->prefix('painel')->name('painel.')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('index');
+    });
+
+    // ── Administração (T17/T18) — role:administrador ───────────────────
+    Route::middleware('role:administrador')->prefix('admin')->name('admin.')->group(function () {
+        Route::post('/usuarios/{usuario}/alternar-status', [UsuarioController::class, 'alternarStatus'])
+            ->name('usuarios.alternar-status');
+        Route::resource('usuarios', UsuarioController::class)
+            ->except(['show'])->parameters(['usuarios' => 'usuario']);
+
+        Route::resource('setores', SetorController::class)->except(['show']);
     });
 });
 

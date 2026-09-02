@@ -312,6 +312,21 @@ return [
             'icon' => 'fas fa-fw fa-chart-line',
             'can' => 'dashboard.ver',
         ],
+
+        // ── Sidebar: Administração ─────────────────────────────────────
+        ['header' => 'ADMINISTRAÇÃO', 'can' => 'usuario.gerenciar'],
+        [
+            'text' => 'Usuários',
+            'route' => 'admin.usuarios.index',
+            'icon' => 'fas fa-fw fa-users',
+            'can' => 'usuario.gerenciar',
+        ],
+        [
+            'text' => 'Setores',
+            'route' => 'admin.setores.index',
+            'icon' => 'fas fa-fw fa-hospital',
+            'can' => 'setor.gerenciar',
+        ],
     ],
 
     /*
