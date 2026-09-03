@@ -333,6 +333,12 @@ return [
             'icon' => 'fas fa-fw fa-sitemap',
             'can' => 'categoria.gerenciar',
         ],
+        [
+            'text' => 'Configurações',
+            'route' => 'admin.configuracoes.index',
+            'icon' => 'fas fa-fw fa-sliders-h',
+            'can' => 'configuracao.gerenciar',
+        ],
     ],
 
     /*

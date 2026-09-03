@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             SetorSeeder::class,
             UsuarioSeeder::class,
             CategoriaEventoSeeder::class,
+            ConfiguracaoSeeder::class,
         ]);
     }
 }
