@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoriaEventoController;
 use App\Http\Controllers\Admin\SetorController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\DashboardController;
@@ -32,7 +33,11 @@ Route::middleware('auth')->group(function () {
             ->except(['show'])->parameters(['usuarios' => 'usuario']);
 
         Route::resource('setores', SetorController::class)->except(['show']);
+
+        // ── Taxonomia de categorias (T19) ──────────────────────────────
+        Route::resource('categorias', CategoriaEventoController::class)
+            ->except(['show'])->parameters(['categorias' => 'categoria']);
     });
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

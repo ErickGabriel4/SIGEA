@@ -327,6 +327,12 @@ return [
             'icon' => 'fas fa-fw fa-hospital',
             'can' => 'setor.gerenciar',
         ],
+        [
+            'text' => 'Categorias',
+            'route' => 'admin.categorias.index',
+            'icon' => 'fas fa-fw fa-sitemap',
+            'can' => 'categoria.gerenciar',
+        ],
     ],
 
     /*

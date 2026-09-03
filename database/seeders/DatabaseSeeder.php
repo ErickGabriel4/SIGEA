@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             PerfilSeeder::class,
             SetorSeeder::class,
             UsuarioSeeder::class,
+            CategoriaEventoSeeder::class,
         ]);
     }
 }
