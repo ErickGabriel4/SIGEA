@@ -14,7 +14,10 @@ class CategoriaEventoController extends Controller
 {
     public function index()
     {
-        $categorias = CategoriaEvento::raizes()->with('filhas')->get();
+        $categorias = CategoriaEvento::raizes()
+            ->with(['filhas' => fn ($q) => $q->withCount('eventos')])
+            ->withCount('eventos')
+            ->get();
 
         return view('admin.categorias.index', ['categorias' => $categorias]);
     }
@@ -57,9 +60,16 @@ class CategoriaEventoController extends Controller
             ->with('sucesso', "Categoria {$categoria->codigo} atualizada.");
     }
 
-    /** Exclusão lógica; a raiz leva junto as suas subcategorias. */
+    /** Exclusão lógica; impedida quando em uso, a raiz leva junto as suas subcategorias. */
     public function destroy(CategoriaEvento $categoria)
     {
+        $emUso = $categoria->eventos()->exists()
+            || $categoria->filhas()->whereHas('eventos')->exists();
+
+        if ($emUso) {
+            return back()->with('erro', 'Categoria em uso não pode ser excluída — inative-a.');
+        }
+
         $categoria->filhas()->delete();
         $categoria->delete();
 

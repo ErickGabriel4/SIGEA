@@ -48,6 +48,11 @@ class Setor extends Model
         return $this->hasMany(User::class);
     }
 
+    public function eventos(): HasMany
+    {
+        return $this->hasMany(EventoAdverso::class, 'setor_ocorrencia_id');
+    }
+
     // ── Escopos ────────────────────────────────────────────────────────
 
     public function scopeAtivos($query)

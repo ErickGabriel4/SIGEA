@@ -49,6 +49,11 @@ class CategoriaEvento extends Model
         return $this->hasMany(self::class, 'categoria_pai_id')->orderBy('codigo');
     }
 
+    public function eventos(): HasMany
+    {
+        return $this->hasMany(EventoAdverso::class, 'categoria_evento_id');
+    }
+
     // ── Escopos ────────────────────────────────────────────────────────
 
     public function scopeAtivas($query)

@@ -26,6 +26,7 @@
                         <th>ICPS</th>
                         <th class="text-center">ANVISA</th>
                         <th class="text-center">Exige investigação</th>
+                        <th class="text-right">Eventos</th>
                         <th>Situação</th>
                         <th class="text-right"></th>
                     </tr>
@@ -42,6 +43,7 @@
                             <td class="text-center">
                                 @if ($raiz->exige_investigacao)<span class="badge badge-warning">Sim</span>@else<span class="text-muted">—</span>@endif
                             </td>
+                            <td class="text-right">{{ $raiz->eventos_count }}</td>
                             <td><span class="badge badge-{{ $raiz->ativo ? 'success' : 'secondary' }}">{{ $raiz->ativo ? 'Ativa' : 'Inativa' }}</span></td>
                             <td class="text-right text-nowrap">
                                 <a href="{{ route('admin.categorias.edit', $raiz) }}" class="btn btn-outline-primary btn-sm" title="Editar"><i class="fas fa-pen"></i></a>
@@ -64,6 +66,7 @@
                                 <td class="text-center">
                                     @if ($filha->exige_investigacao)<span class="badge badge-warning">Sim</span>@else<span class="text-muted">—</span>@endif
                                 </td>
+                                <td class="text-right">{{ $filha->eventos_count }}</td>
                                 <td><span class="badge badge-{{ $filha->ativo ? 'success' : 'secondary' }}">{{ $filha->ativo ? 'Ativa' : 'Inativa' }}</span></td>
                                 <td class="text-right text-nowrap">
                                     <a href="{{ route('admin.categorias.edit', $filha) }}" class="btn btn-outline-primary btn-sm" title="Editar"><i class="fas fa-pen"></i></a>
