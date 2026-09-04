@@ -29,7 +29,12 @@ class AuthenticatedSessionController extends Controller
         // Regeneração do ID de sessão no login (Seção 9, item 7)
         $request->session()->regenerate();
 
-        return redirect()->intended(route('painel.index', absolute: false));
+        // Redirecionamento conforme o perfil (US01)
+        $destino = $request->user()->can('dashboard.ver')
+            ? route('painel.index', absolute: false)
+            : route('eventos.meus', absolute: false);
+
+        return redirect()->intended($destino);
     }
 
     /**

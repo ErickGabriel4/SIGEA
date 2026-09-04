@@ -39,6 +39,16 @@ class AutenticacaoTest extends TestCase
         $this->assertAuthenticatedAs($gestor);
     }
 
+    public function test_notificador_cai_nas_proprias_notificacoes_apos_o_login(): void
+    {
+        $notificador = $this->criarNotificador(['password' => 'senha123']);
+
+        $this->post('/login', [
+            'email' => $notificador->email,
+            'password' => 'senha123',
+        ])->assertRedirect(route('eventos.meus', absolute: false));
+    }
+
     public function test_login_invalido_exibe_mensagem_generica(): void
     {
         $usuario = $this->criarNotificador(['password' => 'senha123']);

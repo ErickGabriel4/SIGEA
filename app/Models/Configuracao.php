@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\TipoConfiguracao;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Parâmetro de configuração do sistema (SLAs, instituição, regras).
@@ -30,24 +31,27 @@ class Configuracao extends Model
 
     /**
      * Obtém o valor tipado de um parâmetro, com cache de 10 minutos.
+     *
+     * Só valores escalares vão para o cache: guardar o próprio model quebra
+     * nos drivers que serializam (banco, arquivo, Redis).
      */
     public static function obter(string $chave, mixed $padrao = null): mixed
     {
-        $config = Cache::remember(
-            "config.{$chave}",
-            now()->addMinutes(10),
-            fn () => static::where('chave', $chave)->first()
-        );
+        $config = Cache::remember("config.{$chave}", now()->addMinutes(10), function () use ($chave) {
+            $registro = DB::table('configuracoes')->where('chave', $chave)->first(['valor', 'tipo']);
 
-        if ($config === null) {
+            return $registro === null ? [] : (array) $registro;
+        });
+
+        if ($config === []) {
             return $padrao;
         }
 
-        return match ($config->tipo) {
-            TipoConfiguracao::Inteiro => (int) $config->valor,
-            TipoConfiguracao::Booleano => filter_var($config->valor, FILTER_VALIDATE_BOOLEAN),
-            TipoConfiguracao::Json => json_decode($config->valor, true),
-            default => $config->valor,
+        return match (TipoConfiguracao::tryFrom($config['tipo'])) {
+            TipoConfiguracao::Inteiro => (int) $config['valor'],
+            TipoConfiguracao::Booleano => filter_var($config['valor'], FILTER_VALIDATE_BOOLEAN),
+            TipoConfiguracao::Json => json_decode($config['valor'], true),
+            default => $config['valor'],
         };
     }
 

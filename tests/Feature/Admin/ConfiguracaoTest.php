@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Models\Configuracao;
 use Database\Seeders\ConfiguracaoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
@@ -59,6 +60,18 @@ class ConfiguracaoTest extends TestCase
     public function test_obter_devolve_o_padrao_quando_a_chave_nao_existe(): void
     {
         $this->assertSame('padrao', Configuracao::obter('chave_inexistente', 'padrao'));
+    }
+
+    /** Guardar o model no cache quebra nos drivers que serializam (banco, arquivo, Redis). */
+    public function test_cache_guarda_apenas_valores_escalares(): void
+    {
+        Configuracao::obter('sla_triagem_horas');
+
+        $emCache = Cache::get('config.sla_triagem_horas');
+
+        $this->assertIsArray($emCache);
+        $this->assertSame(['valor' => '48', 'tipo' => 'inteiro'], $emCache);
+        $this->assertSame($emCache, unserialize(serialize($emCache)));
     }
 
     public function test_gestor_nao_acessa_as_configuracoes(): void
