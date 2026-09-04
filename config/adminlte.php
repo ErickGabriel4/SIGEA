@@ -313,6 +313,26 @@ return [
             'can' => 'dashboard.ver',
         ],
 
+        // ── Sidebar: Notificador ───────────────────────────────────────
+        [
+            'text' => 'Notificar Evento',
+            'route' => 'eventos.create',
+            'icon' => 'fas fa-fw fa-plus-circle',
+            'can' => 'evento.criar',
+        ],
+        [
+            'text' => 'Minhas Notificações',
+            'route' => 'eventos.meus',
+            'icon' => 'fas fa-fw fa-clipboard-list',
+            'can' => 'evento.ver_proprios',
+        ],
+        [
+            'text' => 'Eventos',
+            'route' => 'eventos.index',
+            'icon' => 'fas fa-fw fa-exclamation-triangle',
+            'can' => 'evento.ver_todos',
+        ],
+
         // ── Sidebar: Administração ─────────────────────────────────────
         ['header' => 'ADMINISTRAÇÃO', 'can' => 'usuario.gerenciar'],
         [
