@@ -122,16 +122,21 @@ class EventoAdversoController extends Controller
     }
 
     /** T07 — Detalhe do evento com abas. */
-    public function show(EventoAdverso $evento)
+    public function show(Request $request, EventoAdverso $evento)
     {
         $this->authorize('view', $evento);
 
         $evento->load([
             'categoria.pai', 'setorOcorrencia', 'setorNotificante', 'notificante',
-            'profissionais.usuario', 'historico.usuario',
+            'profissionais.usuario', 'anexos.usuario', 'historico.usuario',
         ]);
 
-        return view('eventos.show', ['evento' => $evento]);
+        $comentarios = $evento->comentarios()
+            ->visiveisPara($request->user())
+            ->with('autor')
+            ->get();
+
+        return view('eventos.show', ['evento' => $evento, 'comentarios' => $comentarios]);
     }
 
     /** T08 — Edição de rascunho (mesmo wizard, pré-preenchido). */

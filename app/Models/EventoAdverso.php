@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -125,6 +126,16 @@ class EventoAdverso extends Model
     public function historico(): HasMany
     {
         return $this->hasMany(EventoHistorico::class)->orderBy('created_at');
+    }
+
+    public function anexos(): HasMany
+    {
+        return $this->hasMany(EventoAnexo::class);
+    }
+
+    public function comentarios(): MorphMany
+    {
+        return $this->morphMany(Comentario::class, 'comentavel')->orderByDesc('created_at');
     }
 
     // ── Escopos ────────────────────────────────────────────────────────

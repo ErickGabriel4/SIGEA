@@ -4,8 +4,10 @@ use App\Http\Controllers\Admin\CategoriaEventoController;
 use App\Http\Controllers\Admin\ConfiguracaoController;
 use App\Http\Controllers\Admin\SetorController;
 use App\Http\Controllers\Admin\UsuarioController;
+use App\Http\Controllers\ComentarioController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventoAdversoController;
+use App\Http\Controllers\EventoAnexoController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,6 +48,13 @@ Route::middleware('auth')->group(function () {
         Route::put('/{evento}', [EventoAdversoController::class, 'update'])->name('update');
         Route::delete('/{evento}', [EventoAdversoController::class, 'destroy'])->name('destroy');
         Route::post('/{evento}/enviar', [EventoAdversoController::class, 'enviar'])->name('enviar');
+
+        // ── Comentários e anexos (objetivo específico e) ────────────────
+        Route::post('/{evento}/comentarios', [ComentarioController::class, 'store'])->name('comentario.store');
+
+        Route::post('/{evento}/anexos', [EventoAnexoController::class, 'store'])->name('anexo.store');
+        Route::get('/{evento}/anexos/{anexo}', [EventoAnexoController::class, 'download'])->name('anexo.download');
+        Route::delete('/{evento}/anexos/{anexo}', [EventoAnexoController::class, 'destroy'])->name('anexo.destroy');
     });
 
     // ── Administração (T17/T18) — role:administrador ───────────────────

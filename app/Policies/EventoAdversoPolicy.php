@@ -55,4 +55,17 @@ class EventoAdversoPolicy
         return $evento->status === StatusEvento::Rascunho
             && $evento->notificante_id === $usuario->id;
     }
+
+    /** Anexar arquivos: quem pode ver e o evento ainda não foi concluído/cancelado. */
+    public function anexar(User $usuario, EventoAdverso $evento): bool
+    {
+        return $this->view($usuario, $evento)
+            && ! in_array($evento->status, [StatusEvento::Concluido, StatusEvento::Cancelado], true);
+    }
+
+    /** Comentar: quem pode ver o evento. */
+    public function comentar(User $usuario, EventoAdverso $evento): bool
+    {
+        return $this->view($usuario, $evento);
+    }
 }
