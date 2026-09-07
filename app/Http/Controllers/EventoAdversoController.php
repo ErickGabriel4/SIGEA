@@ -3,14 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Enums\StatusEvento;
+use App\Exceptions\TransicaoInvalidaException;
 use App\Http\Requests\EventoAdversoRequest;
 use App\Models\CategoriaEvento;
 use App\Models\Configuracao;
 use App\Models\EventoAdverso;
-use App\Models\EventoHistorico;
 use App\Models\Setor;
 use App\Models\User;
 use App\Services\PseudonimizadorService;
+use App\Services\WorkflowEventoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -23,6 +24,7 @@ class EventoAdversoController extends Controller
 {
     public function __construct(
         private readonly PseudonimizadorService $pseudonimizador,
+        private readonly WorkflowEventoService $workflow,
     ) {
     }
 
@@ -111,7 +113,7 @@ class EventoAdversoController extends Controller
         });
 
         if ($enviar) {
-            $this->enviarAoNucleo($evento, $anonima ? null : $request->user()->id);
+            $this->enviarAoNucleo($evento, $anonima ? null : $request->user());
 
             return view('eventos.confirmacao', ['evento' => $evento, 'anonima' => $anonima]);
         }
@@ -170,7 +172,7 @@ class EventoAdversoController extends Controller
         });
 
         if ($request->input('acao_formulario') === 'enviar') {
-            $this->enviarAoNucleo($evento, $request->user()->id);
+            $this->enviarAoNucleo($evento, $request->user());
 
             return view('eventos.confirmacao', ['evento' => $evento, 'anonima' => false]);
         }
@@ -197,30 +199,43 @@ class EventoAdversoController extends Controller
     {
         $this->authorize('enviar', $evento);
 
-        $this->enviarAoNucleo($evento, $request->user()->id);
+        $this->enviarAoNucleo($evento, $request->user());
 
         return view('eventos.confirmacao', ['evento' => $evento, 'anonima' => false]);
     }
 
-    /**
-     * Transição rascunho → notificado: encaminha o evento ao NSP e registra
-     * a linha correspondente na trilha do workflow.
-     */
-    private function enviarAoNucleo(EventoAdverso $evento, ?int $userId): void
+    /** Cancela o evento (rascunho do dono, ou em triagem por um gestor). */
+    public function cancelar(Request $request, EventoAdverso $evento)
     {
-        DB::transaction(function () use ($evento, $userId) {
-            $statusAnterior = $evento->status;
+        $this->authorize('cancelar', $evento);
 
-            $evento->update(['status' => StatusEvento::Notificado]);
+        $request->validate(
+            ['justificativa' => [$evento->status === StatusEvento::Rascunho ? 'nullable' : 'required', 'string', 'max:1000']],
+            [],
+            ['justificativa' => 'justificativa']
+        );
 
-            EventoHistorico::create([
-                'evento_adverso_id' => $evento->id,
-                'user_id' => $userId,
-                'status_anterior' => $statusAnterior->value,
-                'status_novo' => StatusEvento::Notificado->value,
-                'acao' => 'envio',
-            ]);
-        });
+        try {
+            $this->workflow->transicionar(
+                $evento,
+                StatusEvento::Cancelado,
+                $request->user(),
+                $request->input('justificativa'),
+                'cancelamento'
+            );
+        } catch (TransicaoInvalidaException $e) {
+            return back()->with('erro', $e->getMessage());
+        }
+
+        return redirect()
+            ->route('eventos.show', $evento)
+            ->with('sucesso', "Evento {$evento->protocolo} cancelado.");
+    }
+
+    /** Transição rascunho → notificado: encaminha o evento ao NSP. */
+    private function enviarAoNucleo(EventoAdverso $evento, ?User $usuario): void
+    {
+        $this->workflow->transicionar($evento, StatusEvento::Notificado, $usuario, null, 'envio');
     }
 
     /** Dados comuns aos formulários do wizard. */

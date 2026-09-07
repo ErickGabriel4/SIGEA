@@ -332,6 +332,12 @@ return [
             'icon' => 'fas fa-fw fa-exclamation-triangle',
             'can' => 'evento.ver_todos',
         ],
+        [
+            'text' => 'Triagem',
+            'route' => 'triagem.index',
+            'icon' => 'fas fa-fw fa-clipboard-check',
+            'can' => 'evento.triar',
+        ],
 
         // ── Sidebar: Administração ─────────────────────────────────────
         ['header' => 'ADMINISTRAÇÃO', 'can' => 'usuario.gerenciar'],

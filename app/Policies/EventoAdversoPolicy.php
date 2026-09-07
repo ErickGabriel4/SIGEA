@@ -56,6 +56,16 @@ class EventoAdversoPolicy
             && $evento->notificante_id === $usuario->id;
     }
 
+    /** Cancelar: dono em rascunho, ou gestor em triagem. */
+    public function cancelar(User $usuario, EventoAdverso $evento): bool
+    {
+        if ($evento->status === StatusEvento::Rascunho) {
+            return $evento->notificante_id === $usuario->id;
+        }
+
+        return $evento->status === StatusEvento::EmTriagem && $usuario->can('evento.triar');
+    }
+
     /** Anexar arquivos: quem pode ver e o evento ainda não foi concluído/cancelado. */
     public function anexar(User $usuario, EventoAdverso $evento): bool
     {

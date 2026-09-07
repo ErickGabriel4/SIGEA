@@ -164,6 +164,18 @@ class EventoAdverso extends Model
 
     // ── Acessores auxiliares ───────────────────────────────────────────
 
+    /** Classificação completa: pré-condição para encaminhar a triagem. */
+    public function classificacaoCompleta(): bool
+    {
+        return $this->categoria_evento_id !== null
+            && $this->classificacao !== null
+            && $this->grau_dano !== null
+            && $this->evitabilidade !== null
+            && $this->evitabilidade !== Evitabilidade::NaoAvaliado
+            && $this->probabilidade !== null
+            && $this->severidade !== null;
+    }
+
     /** Situação do prazo: verde (no prazo), amarelo (próximo), vermelho (estourado). */
     public function getSituacaoPrazoAttribute(): ?string
     {
