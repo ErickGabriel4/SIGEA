@@ -69,6 +69,35 @@
     display: none;
 }
 
+/* Matriz de risco 5×5 */
+.matriz-risco {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.matriz-risco th,
+.matriz-risco td {
+    border: 1px solid #dee2e6;
+    text-align: center;
+    padding: .5rem;
+    min-width: 3rem;
+}
+
+.risco-baixo { background-color: #c3e6cb; color: #155724; }
+.risco-moderado { background-color: #ffeeba; color: #856404; }
+.risco-alto { background-color: #ffd8a8; color: #7f4f24; }
+.risco-extremo { background-color: #f5c6cb; color: #721c24; }
+
+.celula-selecionada {
+    outline: 3px solid #343a40 !important;
+}
+
+/* Diagrama de Ishikawa */
+.diagrama-ishikawa {
+    width: 100%;
+    overflow-x: auto;
+}
+
 /* Indicador de prazo (bolinha verde/amarela/vermelha + texto) */
 .prazo-indicador {
     display: inline-flex;

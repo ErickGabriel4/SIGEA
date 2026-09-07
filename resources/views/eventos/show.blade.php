@@ -42,6 +42,35 @@
                         <button class="btn btn-success btn-sm"><i class="fas fa-paper-plane mr-1"></i> Enviar</button>
                     </form>
                 @endcan
+
+                @if ($ehGestor && $evento->status === \App\Enums\StatusEvento::Notificado)
+                    @can('evento.triar')
+                        <form method="POST" action="{{ route('triagem.assumir', $evento) }}" class="d-inline">
+                            @csrf
+                            <button class="btn btn-primary btn-sm"><i class="fas fa-inbox mr-1"></i> Assumir triagem</button>
+                        </form>
+                    @endcan
+                @endif
+
+                @if ($ehGestor && $evento->status === \App\Enums\StatusEvento::EmTriagem)
+                    <a href="{{ route('triagem.edit', $evento) }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-clipboard-check mr-1"></i> Continuar triagem
+                    </a>
+                @endif
+
+                @if ($ehGestor && $evento->status === \App\Enums\StatusEvento::EmInvestigacao && $evento->investigacao === null)
+                    @can('investigacao.gerenciar')
+                        <a href="{{ route('investigacoes.create', $evento) }}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-search mr-1"></i> Abrir investigação
+                        </a>
+                    @endcan
+                @endif
+
+                @can('cancelar', $evento)
+                    <button class="btn btn-outline-danger btn-sm" data-toggle="modal" data-target="#modal-cancelar">
+                        <i class="fas fa-ban mr-1"></i> Cancelar
+                    </button>
+                @endcan
             </div>
         </div>
     </div>
@@ -53,6 +82,8 @@
                 @foreach ([
                     'resumo' => 'Resumo',
                     'envolvidos' => 'Envolvidos',
+                    'classificacao' => 'Classificação',
+                    'investigacao' => 'Investigação',
                     'anexos' => 'Anexos',
                     'comentarios' => 'Comentários',
                     'historico' => 'Histórico',
@@ -142,6 +173,91 @@
                             @endforelse
                         </dd>
                     </dl>
+                </div>
+
+                {{-- ── Classificação ── --}}
+                <div class="tab-pane fade @if ($abaAtiva === 'classificacao') show active @endif" id="aba-classificacao" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-5">Classificação do incidente</dt>
+                                <dd class="col-sm-7"><span class="badge badge-{{ $evento->classificacao->cor() }}">{{ $evento->classificacao->label() }}</span></dd>
+                                <dt class="col-sm-5">Grau de dano</dt>
+                                <dd class="col-sm-7"><x-badge-dano :dano="$evento->grau_dano" /></dd>
+                                <dt class="col-sm-5">Evitabilidade</dt>
+                                <dd class="col-sm-7"><span class="badge badge-{{ $evento->evitabilidade->cor() }}">{{ $evento->evitabilidade->label() }}</span></dd>
+                                <dt class="col-sm-5">Probabilidade</dt>
+                                <dd class="col-sm-7">{{ $evento->probabilidade ?? '—' }}</dd>
+                                <dt class="col-sm-5">Severidade</dt>
+                                <dd class="col-sm-7">{{ $evento->severidade ?? '—' }}</dd>
+                                <dt class="col-sm-5">Score / nível de risco</dt>
+                                <dd class="col-sm-7"><x-badge-risco :nivel="$evento->nivel_risco" :score="$evento->score_risco" /></dd>
+                                <dt class="col-sm-5">Prazo de conclusão</dt>
+                                <dd class="col-sm-7"><x-indicador-prazo :evento="$evento" /></dd>
+                                @if ($evento->feedback_notificante)
+                                    <dt class="col-sm-5">Devolutiva ao notificante</dt>
+                                    <dd class="col-sm-7">{{ $evento->feedback_notificante }}</dd>
+                                @endif
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            @if ($evento->probabilidade && $evento->severidade)
+                                <p class="mb-1 font-weight-bold">Posição na matriz de risco 5×5:</p>
+                                <table class="matriz-risco" aria-label="Posição do evento na matriz de risco">
+                                    <tbody>
+                                        @for ($p = 5; $p >= 1; $p--)
+                                            <tr>
+                                                <th scope="row" class="small">P{{ $p }}</th>
+                                                @for ($s = 1; $s <= 5; $s++)
+                                                    @php($score = $p * $s)
+                                                    @php($classe = $score <= 4 ? 'baixo' : ($score <= 9 ? 'moderado' : ($score <= 15 ? 'alto' : 'extremo')))
+                                                    <td class="risco-{{ $classe }} @if ($p === $evento->probabilidade && $s === $evento->severidade) celula-selecionada @endif">
+                                                        {{ $score }}
+                                                    </td>
+                                                @endfor
+                                            </tr>
+                                        @endfor
+                                        <tr>
+                                            <th></th>
+                                            @for ($s = 1; $s <= 5; $s++)<th class="small">S{{ $s }}</th>@endfor
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            @else
+                                <p class="text-muted">Evento ainda não classificado na matriz de risco.</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ── Investigação ── --}}
+                <div class="tab-pane fade @if ($abaAtiva === 'investigacao') show active @endif" id="aba-investigacao" role="tabpanel">
+                    @if ($evento->investigacao)
+                        <dl class="row">
+                            <dt class="col-sm-3">Status</dt>
+                            <dd class="col-sm-9"><span class="badge badge-{{ $evento->investigacao->status->cor() }}">{{ $evento->investigacao->status->label() }}</span></dd>
+                            <dt class="col-sm-3">Método</dt>
+                            <dd class="col-sm-9">{{ $evento->investigacao->metodo->label() }}</dd>
+                            <dt class="col-sm-3">Responsável</dt>
+                            <dd class="col-sm-9">{{ $evento->investigacao->responsavel->nome }}</dd>
+                            <dt class="col-sm-3">Causa raiz</dt>
+                            <dd class="col-sm-9">{{ $evento->investigacao->causa_raiz ?? 'Em análise' }}</dd>
+                        </dl>
+                        @can('investigacao.gerenciar')
+                            <a href="{{ route('investigacoes.show', $evento->investigacao) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-search mr-1"></i> Abrir investigação completa
+                            </a>
+                        @endcan
+                    @else
+                        <p class="text-muted mb-2">Nenhuma investigação registrada para este evento.</p>
+                        @if ($ehGestor && $evento->status === \App\Enums\StatusEvento::EmInvestigacao)
+                            @can('investigacao.gerenciar')
+                                <a href="{{ route('investigacoes.create', $evento) }}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-plus mr-1"></i> Abrir investigação
+                                </a>
+                            @endcan
+                        @endif
+                    @endif
                 </div>
 
                 {{-- ── Anexos ── --}}
@@ -250,4 +366,33 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal de cancelamento --}}
+    @can('cancelar', $evento)
+        <div class="modal fade" id="modal-cancelar" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <form method="POST" action="{{ route('eventos.cancelar', $evento) }}" class="modal-content">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title">Cancelar evento {{ $evento->protocolo }}</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar"><span aria-hidden="true">&times;</span></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group mb-0">
+                            <label for="justificativa-cancelar">
+                                Justificativa @if ($evento->status !== \App\Enums\StatusEvento::Rascunho) <span class="text-danger">*</span> @endif
+                            </label>
+                            <textarea name="justificativa" id="justificativa-cancelar" class="form-control" rows="3"
+                                      @if ($evento->status !== \App\Enums\StatusEvento::Rascunho) required @endif
+                                      placeholder="Ex.: duplicidade do EA-2026-000123"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Voltar</button>
+                        <button type="submit" class="btn btn-danger">Confirmar cancelamento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endcan
 @endsection

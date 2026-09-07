@@ -338,6 +338,12 @@ return [
             'icon' => 'fas fa-fw fa-clipboard-check',
             'can' => 'evento.triar',
         ],
+        [
+            'text' => 'Investigações',
+            'route' => 'investigacoes.index',
+            'icon' => 'fas fa-fw fa-search',
+            'can' => 'investigacao.gerenciar',
+        ],
 
         // ── Sidebar: Administração ─────────────────────────────────────
         ['header' => 'ADMINISTRAÇÃO', 'can' => 'usuario.gerenciar'],

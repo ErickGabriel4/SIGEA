@@ -19,13 +19,14 @@ class WorkflowEventoService
 {
     /**
      * Transições permitidas: origem => destinos possíveis.
-     * As transições a partir de em_investigacao/aguardando_acao são
-     * adicionadas quando investigação e ações corretivas existirem.
+     * As transições a partir de aguardando_acao são adicionadas quando
+     * as ações corretivas existirem.
      */
     private const TRANSICOES = [
         'rascunho' => ['notificado', 'cancelado'],
         'notificado' => ['em_triagem'],
         'em_triagem' => ['em_investigacao', 'aguardando_acao', 'concluido', 'cancelado'],
+        'em_investigacao' => ['aguardando_acao'],
     ];
 
     /** Transições que exigem justificativa obrigatória. */
@@ -106,6 +107,10 @@ class WorkflowEventoService
                         ClassificacaoIncidente::CircunstanciaNotificavel,
                     ], true),
                 $de, $para, 'Conclusão direta permitida apenas para near miss ou circunstância notificável sem dano.'
+            ),
+            'em_investigacao:aguardando_acao' => $this->exigir(
+                $evento->investigacao?->status === \App\Enums\StatusInvestigacao::Concluida,
+                $de, $para, 'A investigação deve estar concluída.'
             ),
             default => null,
         };

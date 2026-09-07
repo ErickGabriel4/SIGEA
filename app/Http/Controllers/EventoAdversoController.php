@@ -131,6 +131,7 @@ class EventoAdversoController extends Controller
         $evento->load([
             'categoria.pai', 'setorOcorrencia', 'setorNotificante', 'notificante',
             'profissionais.usuario', 'anexos.usuario', 'historico.usuario',
+            'investigacao.responsavel',
         ]);
 
         $comentarios = $evento->comentarios()

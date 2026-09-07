@@ -8,6 +8,8 @@ use App\Http\Controllers\ComentarioController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventoAdversoController;
 use App\Http\Controllers\EventoAnexoController;
+use App\Http\Controllers\InvestigacaoCausaController;
+use App\Http\Controllers\InvestigacaoController;
 use App\Http\Controllers\TriagemController;
 use Illuminate\Support\Facades\Route;
 
@@ -68,6 +70,21 @@ Route::middleware('auth')->group(function () {
         Route::post('/{evento}/encaminhar', [TriagemController::class, 'encaminhar'])->name('encaminhar');
         Route::post('/{evento}/concluir', [TriagemController::class, 'concluir'])->name('concluir');
         Route::post('/{evento}/feedback', [TriagemController::class, 'feedback'])->name('feedback');
+    });
+
+    // ── Investigações de causa raiz (T11/T12) — permission:investigacao.gerenciar ──
+    Route::middleware('permission:investigacao.gerenciar')->group(function () {
+        Route::get('/investigacoes', [InvestigacaoController::class, 'index'])->name('investigacoes.index');
+        Route::get('/eventos/{evento}/investigacao/nova', [InvestigacaoController::class, 'create'])->name('investigacoes.create');
+        Route::post('/eventos/{evento}/investigacao', [InvestigacaoController::class, 'store'])->name('investigacoes.store');
+        Route::get('/investigacoes/{investigacao}', [InvestigacaoController::class, 'show'])->name('investigacoes.show');
+        Route::get('/investigacoes/{investigacao}/editar', [InvestigacaoController::class, 'edit'])->name('investigacoes.edit');
+        Route::put('/investigacoes/{investigacao}', [InvestigacaoController::class, 'update'])->name('investigacoes.update');
+        Route::post('/investigacoes/{investigacao}/concluir', [InvestigacaoController::class, 'concluir'])->name('investigacoes.concluir');
+
+        Route::post('/investigacoes/{investigacao}/causas', [InvestigacaoCausaController::class, 'store'])->name('causas.store');
+        Route::put('/investigacoes/{investigacao}/causas/{causa}', [InvestigacaoCausaController::class, 'update'])->name('causas.update');
+        Route::delete('/investigacoes/{investigacao}/causas/{causa}', [InvestigacaoCausaController::class, 'destroy'])->name('causas.destroy');
     });
 
     // ── Administração (T17/T18) — role:administrador ───────────────────

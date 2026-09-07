@@ -115,3 +115,84 @@ document.addEventListener('DOMContentLoaded', () => {
         window.calcularRisco();
     }
 });
+
+/*
+ * Diagrama de Ishikawa em SVG (T12), desenhado a partir das causas cadastradas.
+ * dados: { pessoa: [{descricao, raiz}], processo: [...], ... }
+ */
+window.desenharIshikawa = function (svgId, dados, efeito) {
+    const svg = document.getElementById(svgId);
+    if (!svg) return;
+
+    const eixosSuperiores = ['pessoa', 'processo', 'equipamento'];
+    const eixosInferiores = ['ambiente', 'material', 'gestao'];
+    const rotulos = {
+        pessoa: 'Pessoa', processo: 'Processo', equipamento: 'Equipamento',
+        ambiente: 'Ambiente', material: 'Material', gestao: 'Gestão',
+    };
+
+    const larg = 1000;
+    const alt = 460;
+    svg.setAttribute('viewBox', `0 0 ${larg} ${alt}`);
+    svg.innerHTML = '';
+
+    const ns = 'http://www.w3.org/2000/svg';
+    const linha = (x1, y1, x2, y2, cor = '#495057', esp = 2) => {
+        const l = document.createElementNS(ns, 'line');
+        l.setAttribute('x1', x1); l.setAttribute('y1', y1);
+        l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+        l.setAttribute('stroke', cor); l.setAttribute('stroke-width', esp);
+        svg.appendChild(l);
+    };
+    const texto = (x, y, conteudo, opts = {}) => {
+        const t = document.createElementNS(ns, 'text');
+        t.setAttribute('x', x); t.setAttribute('y', y);
+        t.setAttribute('font-size', opts.tam || 12);
+        t.setAttribute('fill', opts.cor || '#212529');
+        if (opts.peso) t.setAttribute('font-weight', opts.peso);
+        if (opts.ancora) t.setAttribute('text-anchor', opts.ancora);
+        t.textContent = conteudo;
+        svg.appendChild(t);
+    };
+
+    const meioY = alt / 2;
+    const cabecaX = larg - 150;
+
+    // Espinha central + cabeça (efeito)
+    linha(40, meioY, cabecaX, meioY, '#212529', 3);
+    const cabeca = document.createElementNS(ns, 'rect');
+    cabeca.setAttribute('x', cabecaX); cabeca.setAttribute('y', meioY - 42);
+    cabeca.setAttribute('width', 140); cabeca.setAttribute('height', 84);
+    cabeca.setAttribute('rx', 8);
+    cabeca.setAttribute('fill', '#dc3545');
+    svg.appendChild(cabeca);
+
+    const quebrado = (efeito || 'Evento adverso').match(/.{1,18}(\s|$)/g) || [];
+    quebrado.slice(0, 4).forEach((parte, i) => {
+        texto(cabecaX + 70, meioY - 20 + i * 16, parte.trim(), { cor: '#fff', ancora: 'middle', tam: 12, peso: 700 });
+    });
+
+    const desenharEixo = (nome, indice, superior) => {
+        const baseX = 150 + indice * 260;
+        const topoY = superior ? 46 : alt - 46;
+        const juntaX = baseX + 130;
+
+        linha(baseX, topoY, juntaX, meioY, '#6c757d', 2);
+        texto(baseX, superior ? topoY - 10 : topoY + 20, rotulos[nome], { peso: 700, tam: 14 });
+
+        const causas = (dados[nome] || []).slice(0, 4);
+        causas.forEach((causa, i) => {
+            const frac = (i + 1) / (causas.length + 1);
+            const cx = baseX + (juntaX - baseX) * frac;
+            const cy = topoY + (meioY - topoY) * frac;
+            linha(cx, cy, cx - 85, cy, causa.raiz ? '#dc3545' : '#adb5bd', causa.raiz ? 2.5 : 1.5);
+            const rotulo = causa.descricao.length > 30 ? causa.descricao.slice(0, 28) + '…' : causa.descricao;
+            texto(cx - 88, cy - 4, (causa.raiz ? '★ ' : '') + rotulo, {
+                ancora: 'end', tam: 10, cor: causa.raiz ? '#dc3545' : '#495057', peso: causa.raiz ? 700 : 400,
+            });
+        });
+    };
+
+    eixosSuperiores.forEach((nome, i) => desenharEixo(nome, i, true));
+    eixosInferiores.forEach((nome, i) => desenharEixo(nome, i, false));
+};
