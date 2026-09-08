@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AcaoCorretivaController;
 use App\Http\Controllers\Admin\CategoriaEventoController;
 use App\Http\Controllers\Admin\ConfiguracaoController;
 use App\Http\Controllers\Admin\SetorController;
@@ -86,6 +87,19 @@ Route::middleware('auth')->group(function () {
         Route::put('/investigacoes/{investigacao}/causas/{causa}', [InvestigacaoCausaController::class, 'update'])->name('causas.update');
         Route::delete('/investigacoes/{investigacao}/causas/{causa}', [InvestigacaoCausaController::class, 'destroy'])->name('causas.destroy');
     });
+
+    // ── Ações corretivas (T13–T15) ───────────────────────────────────────
+    Route::prefix('acoes')->name('acoes.')->group(function () {
+        Route::get('/', [AcaoCorretivaController::class, 'index'])->name('index');
+        Route::get('/minhas', [AcaoCorretivaController::class, 'minhas'])->name('minhas');
+        Route::get('/{acao}/editar', [AcaoCorretivaController::class, 'edit'])->name('edit');
+        Route::put('/{acao}', [AcaoCorretivaController::class, 'update'])->name('update');
+        Route::delete('/{acao}', [AcaoCorretivaController::class, 'destroy'])->name('destroy');
+        Route::post('/{acao}/concluir', [AcaoCorretivaController::class, 'concluir'])->name('concluir');
+        Route::post('/{acao}/avaliar', [AcaoCorretivaController::class, 'avaliar'])->name('avaliar');
+    });
+    Route::get('/eventos/{evento}/acoes/nova', [AcaoCorretivaController::class, 'create'])->name('acoes.create');
+    Route::post('/eventos/{evento}/acoes', [AcaoCorretivaController::class, 'store'])->name('acoes.store');
 
     // ── Administração (T17/T18) — role:administrador ───────────────────
     Route::middleware('role:administrador')->prefix('admin')->name('admin.')->group(function () {

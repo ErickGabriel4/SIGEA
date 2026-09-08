@@ -17,16 +17,13 @@ use Illuminate\Support\Facades\DB;
  */
 class WorkflowEventoService
 {
-    /**
-     * Transições permitidas: origem => destinos possíveis.
-     * As transições a partir de aguardando_acao são adicionadas quando
-     * as ações corretivas existirem.
-     */
+    /** Transições permitidas: origem => destinos possíveis. */
     private const TRANSICOES = [
         'rascunho' => ['notificado', 'cancelado'],
         'notificado' => ['em_triagem'],
         'em_triagem' => ['em_investigacao', 'aguardando_acao', 'concluido', 'cancelado'],
         'em_investigacao' => ['aguardando_acao'],
+        'aguardando_acao' => ['concluido'],
     ];
 
     /** Transições que exigem justificativa obrigatória. */
@@ -111,6 +108,11 @@ class WorkflowEventoService
             'em_investigacao:aguardando_acao' => $this->exigir(
                 $evento->investigacao?->status === \App\Enums\StatusInvestigacao::Concluida,
                 $de, $para, 'A investigação deve estar concluída.'
+            ),
+            'aguardando_acao:concluido' => $this->exigir(
+                $evento->acoesCorretivas()->exists()
+                    && ! $evento->acoesCorretivas()->whereNotIn('status', ['concluida', 'cancelada'])->exists(),
+                $de, $para, 'Deve haver ao menos uma ação corretiva e todas devem estar concluídas ou canceladas.'
             ),
             default => null,
         };

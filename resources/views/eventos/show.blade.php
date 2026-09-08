@@ -66,6 +66,21 @@
                     @endcan
                 @endif
 
+                @if ($ehGestor && $evento->status === \App\Enums\StatusEvento::AguardandoAcao)
+                    @can('acao.gerenciar')
+                        <a href="{{ route('acoes.create', $evento) }}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-plus mr-1"></i> Nova ação
+                        </a>
+                    @endcan
+                    @can('evento.concluir')
+                        <form method="POST" action="{{ route('triagem.concluir', $evento) }}" class="d-inline"
+                              onsubmit="return confirm('Concluir o evento? Todas as ações devem estar tratadas.')">
+                            @csrf
+                            <button class="btn btn-success btn-sm"><i class="fas fa-flag-checkered mr-1"></i> Concluir evento</button>
+                        </form>
+                    @endcan
+                @endif
+
                 @can('cancelar', $evento)
                     <button class="btn btn-outline-danger btn-sm" data-toggle="modal" data-target="#modal-cancelar">
                         <i class="fas fa-ban mr-1"></i> Cancelar
@@ -84,6 +99,7 @@
                     'envolvidos' => 'Envolvidos',
                     'classificacao' => 'Classificação',
                     'investigacao' => 'Investigação',
+                    'acoes' => 'Ações corretivas',
                     'anexos' => 'Anexos',
                     'comentarios' => 'Comentários',
                     'historico' => 'Histórico',
@@ -258,6 +274,52 @@
                             @endcan
                         @endif
                     @endif
+                </div>
+
+                {{-- ── Ações corretivas ── --}}
+                <div class="tab-pane fade @if ($abaAtiva === 'acoes') show active @endif" id="aba-acoes" role="tabpanel">
+                    @if ($ehGestor && ! in_array($evento->status, [\App\Enums\StatusEvento::Concluido, \App\Enums\StatusEvento::Cancelado, \App\Enums\StatusEvento::Rascunho], true))
+                        @can('acao.gerenciar')
+                            <a href="{{ route('acoes.create', $evento) }}" class="btn btn-primary btn-sm mb-3">
+                                <i class="fas fa-plus mr-1"></i> Nova ação corretiva
+                            </a>
+                        @endcan
+                    @endif
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Título</th>
+                                    <th>Tipo</th>
+                                    <th>Responsável</th>
+                                    <th>Prazo</th>
+                                    <th>Status</th>
+                                    <th>Eficácia</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($evento->acoesCorretivas as $acao)
+                                    <tr>
+                                        <td>{{ $acao->titulo }}</td>
+                                        <td>{{ $acao->tipo->label() }}</td>
+                                        <td>{{ $acao->responsavel->nome }}</td>
+                                        <td>{{ $acao->prazo->format('d/m/Y') }}</td>
+                                        <td><span class="badge badge-{{ $acao->status->cor() }}">{{ $acao->status->label() }}</span></td>
+                                        <td><span class="badge badge-{{ $acao->eficacia->cor() }}">{{ $acao->eficacia->label() }}</span></td>
+                                        <td class="text-right">
+                                            @can('update', $acao)
+                                                <a href="{{ route('acoes.edit', $acao) }}" class="btn btn-outline-primary btn-xs" title="Editar"><i class="fas fa-pen"></i></a>
+                                            @endcan
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="7" class="text-center text-muted py-3">Nenhuma ação corretiva cadastrada.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 {{-- ── Anexos ── --}}

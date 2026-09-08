@@ -344,6 +344,18 @@ return [
             'icon' => 'fas fa-fw fa-search',
             'can' => 'investigacao.gerenciar',
         ],
+        [
+            'text' => 'Ações Corretivas',
+            'route' => 'acoes.index',
+            'icon' => 'fas fa-fw fa-tasks',
+            'can' => 'acao.gerenciar',
+        ],
+        [
+            'text' => 'Minhas Ações',
+            'route' => 'acoes.minhas',
+            'icon' => 'fas fa-fw fa-list-check',
+            'can' => 'acao.executar',
+        ],
 
         // ── Sidebar: Administração ─────────────────────────────────────
         ['header' => 'ADMINISTRAÇÃO', 'can' => 'usuario.gerenciar'],

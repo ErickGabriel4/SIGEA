@@ -144,6 +144,11 @@ class EventoAdverso extends Model
         return $this->hasOne(Investigacao::class);
     }
 
+    public function acoesCorretivas(): HasMany
+    {
+        return $this->hasMany(AcaoCorretiva::class);
+    }
+
     // ── Escopos ────────────────────────────────────────────────────────
 
     /** Eventos visíveis a um usuário conforme seu perfil (regra de propriedade). */
