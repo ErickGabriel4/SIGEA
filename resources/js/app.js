@@ -1,7 +1,22 @@
 /*
  * JavaScript do SIGEA.
+ * Chart.js 4 é exposto em window.Chart para os gráficos do painel;
  * jQuery/Bootstrap vêm dos assets do AdminLTE (public/vendor).
  */
+import Chart from 'chart.js/auto';
+
+window.Chart = Chart;
+
+/* Paleta padrão dos gráficos */
+window.SigeaCores = {
+    primaria: '#007bff',
+    sucesso: '#28a745',
+    aviso: '#ffc107',
+    perigo: '#dc3545',
+    laranja: '#fd7e14',
+    escuro: '#343a40',
+    serie: ['#007bff', '#28a745', '#ffc107', '#fd7e14', '#dc3545', '#6f42c1', '#20c997', '#17a2b8', '#e83e8c', '#6c757d'],
+};
 
 /*
  * Wizard de notificação (T04): navegação entre passos com validação HTML5.

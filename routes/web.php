@@ -32,9 +32,18 @@ Route::get('/', function () {
 });
 
 Route::middleware('auth')->group(function () {
-    // ── Painel (T02) — permission:dashboard.ver ────────────────────────
+    // ── Painel (T03) — permission:dashboard.ver ─────────────────────────
     Route::middleware('permission:dashboard.ver')->prefix('painel')->name('painel.')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('index');
+
+        Route::middleware('throttle:60,1')->prefix('dados')->group(function () {
+            Route::get('/serie-temporal', [DashboardController::class, 'serieTemporal'])->name('serie');
+            Route::get('/por-categoria', [DashboardController::class, 'porCategoria'])->name('categoria');
+            Route::get('/por-setor', [DashboardController::class, 'porSetor'])->name('setor');
+            Route::get('/por-grau-dano', [DashboardController::class, 'porGrauDano'])->name('dano');
+            Route::get('/matriz-risco', [DashboardController::class, 'matrizRisco'])->name('matriz');
+            Route::get('/indicadores', [DashboardController::class, 'indicadores'])->name('indicadores');
+        });
     });
 
     // ── Eventos adversos (T04–T08) ─────────────────────────────────────

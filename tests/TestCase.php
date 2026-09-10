@@ -2,6 +2,8 @@
 
 namespace Tests;
 
+use App\Models\CategoriaEvento;
+use App\Models\Setor;
 use App\Models\User;
 use Database\Seeders\PerfilSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
@@ -38,5 +40,18 @@ abstract class TestCase extends BaseTestCase
         $usuario->assignRole('administrador');
 
         return $usuario;
+    }
+
+    /** Setor e subcategoria mínimos para criar eventos. */
+    protected function criarBaseEvento(): array
+    {
+        $setor = Setor::factory()->create(['leitos' => 20]);
+        $raiz = CategoriaEvento::factory()->create(['codigo' => 'TST']);
+        $categoria = CategoriaEvento::factory()->create([
+            'codigo' => 'TST.01',
+            'categoria_pai_id' => $raiz->id,
+        ]);
+
+        return [$setor, $categoria];
     }
 }
