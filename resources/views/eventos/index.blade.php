@@ -11,6 +11,16 @@
     <div class="card">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-filter mr-1"></i> Filtros</h3>
+            <div class="card-tools">
+                @can('evento.exportar')
+                    <a href="{{ route('eventos.exportar', request()->query()) }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-file-excel mr-1"></i> Exportar XLSX
+                    </a>
+                    <a href="{{ route('eventos.exportar', array_merge(request()->query(), ['formato' => 'csv'])) }}" class="btn btn-outline-success btn-sm">
+                        CSV
+                    </a>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('eventos.index') }}" class="form-row">

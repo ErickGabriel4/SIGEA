@@ -29,6 +29,10 @@
                 </div>
             </div>
             <div class="mt-2 mt-md-0">
+                <a href="{{ route('eventos.pdf', $evento) }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="far fa-file-pdf mr-1"></i> PDF
+                </a>
+
                 @can('update', $evento)
                     <a href="{{ route('eventos.edit', $evento) }}" class="btn btn-outline-primary btn-sm">
                         <i class="fas fa-pen mr-1"></i> Editar rascunho

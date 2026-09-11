@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\StatusEvento;
 use App\Exceptions\TransicaoInvalidaException;
+use App\Exports\EventosExport;
 use App\Http\Requests\EventoAdversoRequest;
 use App\Models\CategoriaEvento;
 use App\Models\Configuracao;
@@ -12,8 +13,10 @@ use App\Models\Setor;
 use App\Models\User;
 use App\Services\PseudonimizadorService;
 use App\Services\WorkflowEventoService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 /**
  * Registro e acompanhamento de eventos adversos (T04 a T08).
@@ -231,6 +234,33 @@ class EventoAdversoController extends Controller
         return redirect()
             ->route('eventos.show', $evento)
             ->with('sucesso', "Evento {$evento->protocolo} cancelado.");
+    }
+
+    /** Exporta a lista filtrada em CSV/XLSX. */
+    public function exportar(Request $request)
+    {
+        $formato = $request->input('formato', 'xlsx') === 'csv' ? 'csv' : 'xlsx';
+
+        return Excel::download(
+            new EventosExport($request->all()),
+            'eventos_adversos_' . now()->format('Y-m-d_His') . '.' . $formato
+        );
+    }
+
+    /** Ficha do evento em PDF. */
+    public function pdf(Request $request, EventoAdverso $evento)
+    {
+        $this->authorize('view', $evento);
+
+        $evento->load([
+            'categoria.pai', 'setorOcorrencia', 'notificante', 'gestorResponsavel',
+            'profissionais.usuario', 'historico.usuario',
+            'investigacao.causas', 'acoesCorretivas.responsavel',
+        ]);
+
+        return Pdf::loadView('eventos.pdf', ['evento' => $evento])
+            ->setPaper('a4')
+            ->download("evento_{$evento->protocolo}.pdf");
     }
 
     /** Transição rascunho → notificado: encaminha o evento ao NSP. */

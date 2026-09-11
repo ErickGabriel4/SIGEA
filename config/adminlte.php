@@ -356,6 +356,12 @@ return [
             'icon' => 'fas fa-fw fa-list-check',
             'can' => 'acao.executar',
         ],
+        [
+            'text' => 'Relatórios',
+            'route' => 'relatorios.index',
+            'icon' => 'fas fa-fw fa-file-alt',
+            'can' => 'relatorio.ver',
+        ],
 
         // ── Sidebar: Administração ─────────────────────────────────────
         ['header' => 'ADMINISTRAÇÃO', 'can' => 'usuario.gerenciar'],

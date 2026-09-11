@@ -11,6 +11,7 @@ use App\Http\Controllers\EventoAdversoController;
 use App\Http\Controllers\EventoAnexoController;
 use App\Http\Controllers\InvestigacaoCausaController;
 use App\Http\Controllers\InvestigacaoController;
+use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\TriagemController;
 use Illuminate\Support\Facades\Route;
 
@@ -55,6 +56,8 @@ Route::middleware('auth')->group(function () {
             ->middleware('permission:evento.criar')->name('store');
         Route::get('/meus', [EventoAdversoController::class, 'meus'])
             ->middleware('permission:evento.ver_proprios')->name('meus');
+        Route::get('/exportar', [EventoAdversoController::class, 'exportar'])
+            ->middleware('permission:evento.exportar')->name('exportar');
 
         Route::get('/{evento}', [EventoAdversoController::class, 'show'])->name('show');
         Route::get('/{evento}/editar', [EventoAdversoController::class, 'edit'])->name('edit');
@@ -62,6 +65,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{evento}', [EventoAdversoController::class, 'destroy'])->name('destroy');
         Route::post('/{evento}/enviar', [EventoAdversoController::class, 'enviar'])->name('enviar');
         Route::post('/{evento}/cancelar', [EventoAdversoController::class, 'cancelar'])->name('cancelar');
+        Route::get('/{evento}/pdf', [EventoAdversoController::class, 'pdf'])->name('pdf');
 
         // ── Comentários e anexos (objetivo específico e) ────────────────
         Route::post('/{evento}/comentarios', [ComentarioController::class, 'store'])->name('comentario.store');
@@ -109,6 +113,17 @@ Route::middleware('auth')->group(function () {
     });
     Route::get('/eventos/{evento}/acoes/nova', [AcaoCorretivaController::class, 'create'])->name('acoes.create');
     Route::post('/eventos/{evento}/acoes', [AcaoCorretivaController::class, 'store'])->name('acoes.store');
+
+    // ── Relatórios (T16) — permission:relatorio.ver ────────────────────
+    Route::middleware('permission:relatorio.ver')->prefix('relatorios')->name('relatorios.')->group(function () {
+        Route::get('/', [RelatorioController::class, 'index'])->name('index');
+        Route::get('/consolidado', [RelatorioController::class, 'consolidado'])->name('consolidado');
+        Route::get('/por-setor', [RelatorioController::class, 'porSetor'])->name('setor');
+        Route::get('/por-categoria', [RelatorioController::class, 'porCategoria'])->name('categoria');
+        Route::get('/acoes-pendentes', [RelatorioController::class, 'acoesPendentes'])->name('acoes');
+        Route::get('/{tipo}/pdf', [RelatorioController::class, 'pdf'])->name('pdf');
+        Route::get('/{tipo}/excel', [RelatorioController::class, 'excel'])->name('excel');
+    });
 
     // ── Administração (T17/T18) — role:administrador ───────────────────
     Route::middleware('role:administrador')->prefix('admin')->name('admin.')->group(function () {
