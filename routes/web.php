@@ -11,6 +11,7 @@ use App\Http\Controllers\EventoAdversoController;
 use App\Http\Controllers\EventoAnexoController;
 use App\Http\Controllers\InvestigacaoCausaController;
 use App\Http\Controllers\InvestigacaoController;
+use App\Http\Controllers\NotificacaoController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\TriagemController;
 use Illuminate\Support\Facades\Route;
@@ -123,6 +124,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/acoes-pendentes', [RelatorioController::class, 'acoesPendentes'])->name('acoes');
         Route::get('/{tipo}/pdf', [RelatorioController::class, 'pdf'])->name('pdf');
         Route::get('/{tipo}/excel', [RelatorioController::class, 'excel'])->name('excel');
+    });
+
+    // ── Notificações in-app (T22) ──────────────────────────────────────
+    Route::prefix('notificacoes')->name('notificacoes.')->group(function () {
+        Route::get('/', [NotificacaoController::class, 'index'])->name('index');
+        Route::get('/contador', [NotificacaoController::class, 'contador'])->name('contador');
+        Route::post('/{id}/marcar-lida', [NotificacaoController::class, 'marcarLida'])->name('lida');
+        Route::post('/marcar-todas', [NotificacaoController::class, 'marcarTodas'])->name('todas');
     });
 
     // ── Administração (T17/T18) — role:administrador ───────────────────

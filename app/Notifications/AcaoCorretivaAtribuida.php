@@ -21,7 +21,7 @@ class AcaoCorretivaAtribuida extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['database', 'mail'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -33,5 +33,15 @@ class AcaoCorretivaAtribuida extends Notification
             ->line('Prazo: ' . $this->acao->prazo->format('d/m/Y'))
             ->action('Ver minhas ações', route('acoes.minhas'))
             ->line('Conclua a ação registrando a evidência de execução.');
+    }
+
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'acao_id' => $this->acao->id,
+            'titulo' => 'Ação corretiva atribuída',
+            'mensagem' => "\"{$this->acao->titulo}\" — prazo {$this->acao->prazo->format('d/m/Y')}.",
+            'url' => route('acoes.minhas'),
+        ];
     }
 }

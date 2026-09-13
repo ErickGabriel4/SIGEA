@@ -129,3 +129,8 @@
         min-height: 2.9rem;
     }
 }
+
+/* Notificações não lidas */
+.notificacao-nao-lida {
+    background-color: #eaf3fb;
+}

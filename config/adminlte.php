@@ -301,6 +301,18 @@ return [
     'menu' => [
         // ── Navbar ─────────────────────────────────────────────────────
         [
+            'type' => 'navbar-notification',
+            'id' => 'sino-notificacoes',
+            'icon' => 'far fa-bell',
+            'route' => 'notificacoes.index',
+            'topnav_right' => true,
+            'label_color' => 'danger',
+            'update_cfg' => [
+                'route' => 'notificacoes.contador',
+                'period' => 60,
+            ],
+        ],
+        [
             'type' => 'fullscreen-widget',
             'topnav_right' => true,
         ],
