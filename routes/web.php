@@ -85,6 +85,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/{evento}/encaminhar', [TriagemController::class, 'encaminhar'])->name('encaminhar');
         Route::post('/{evento}/concluir', [TriagemController::class, 'concluir'])->name('concluir');
         Route::post('/{evento}/feedback', [TriagemController::class, 'feedback'])->name('feedback');
+        Route::post('/{evento}/notivisa', [TriagemController::class, 'registrarNotivisa'])
+            ->middleware('permission:notivisa.gerenciar')->name('notivisa');
     });
 
     // ── Investigações de causa raiz (T11/T12) — permission:investigacao.gerenciar ──

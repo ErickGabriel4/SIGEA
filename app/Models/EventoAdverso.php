@@ -204,4 +204,10 @@ class EventoAdverso extends Model
 
         return $this->prazo_conclusao->diffInDays(now()) <= $dias ? 'amarelo' : 'verde';
     }
+
+    /** Pendente de registro do protocolo NOTIVISA. */
+    public function pendenteNotivisa(): bool
+    {
+        return $this->notificavel_anvisa && blank($this->protocolo_notivisa);
+    }
 }

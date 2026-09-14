@@ -245,4 +245,19 @@ class TriagemTest extends TestCase
 
         $this->assertSame('Obrigado pela notificação.', $evento->fresh()->feedback_notificante);
     }
+
+    public function test_registro_de_protocolo_notivisa(): void
+    {
+        $gestor = $this->criarGestor();
+        $evento = $this->eventoNotificado(['gestor_responsavel_id' => $gestor->id, 'status' => StatusEvento::EmTriagem]);
+        $evento->update(['notificavel_anvisa' => true]);
+
+        $this->actingAs($gestor)->post(route('triagem.notivisa', $evento), [
+            'protocolo_notivisa' => 'NTV-123456',
+            'notificado_anvisa_em' => today()->toDateString(),
+        ])->assertRedirect();
+
+        $this->assertSame('NTV-123456', $evento->fresh()->protocolo_notivisa);
+        $this->assertFalse($evento->fresh()->pendenteNotivisa());
+    }
 }

@@ -14,6 +14,20 @@
 @php($ehGestor = auth()->user()->can('evento.ver_todos'))
 
 @section('conteudo')
+    {{-- Alerta NOTIVISA fixo (UC22) --}}
+    @if ($ehGestor && $evento->pendenteNotivisa())
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-bullhorn mr-1"></i>
+            <strong>Notificação compulsória pendente:</strong> este evento é elegível à notificação à ANVISA
+            (NOTIVISA) e ainda não possui protocolo registrado.
+            @can('notivisa.gerenciar')
+                <button class="btn btn-outline-light btn-sm ml-2" data-toggle="modal" data-target="#modal-notivisa">
+                    Registrar protocolo NOTIVISA
+                </button>
+            @endcan
+        </div>
+    @endif
+
     {{-- Cabeçalho com badges --}}
     <div class="card">
         <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
@@ -214,6 +228,17 @@
                                 <dd class="col-sm-7"><x-badge-risco :nivel="$evento->nivel_risco" :score="$evento->score_risco" /></dd>
                                 <dt class="col-sm-5">Prazo de conclusão</dt>
                                 <dd class="col-sm-7"><x-indicador-prazo :evento="$evento" /></dd>
+                                @if ($evento->notificavel_anvisa)
+                                    <dt class="col-sm-5">NOTIVISA</dt>
+                                    <dd class="col-sm-7">
+                                        @if ($evento->protocolo_notivisa)
+                                            Protocolo <code>{{ $evento->protocolo_notivisa }}</code>
+                                            em {{ $evento->notificado_anvisa_em?->format('d/m/Y') }}
+                                        @else
+                                            <span class="badge badge-danger">Pendente de registro</span>
+                                        @endif
+                                    </dd>
+                                @endif
                                 @if ($evento->feedback_notificante)
                                     <dt class="col-sm-5">Devolutiva ao notificante</dt>
                                     <dd class="col-sm-7">{{ $evento->feedback_notificante }}</dd>
@@ -456,6 +481,42 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Voltar</button>
                         <button type="submit" class="btn btn-danger">Confirmar cancelamento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endcan
+
+    {{-- Modal NOTIVISA --}}
+    @can('notivisa.gerenciar')
+        <div class="modal fade" id="modal-notivisa" tabindex="-1" role="dialog" aria-labelledby="titulo-modal-notivisa" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <form method="POST" action="{{ route('triagem.notivisa', $evento) }}" class="modal-content">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="titulo-modal-notivisa">Registrar protocolo NOTIVISA</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar"><span aria-hidden="true">&times;</span></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="small text-muted">
+                            A notificação ao NOTIVISA é feita manualmente no portal da ANVISA. Registre aqui o
+                            protocolo retornado para rastreabilidade.
+                        </p>
+                        <div class="form-group">
+                            <label for="protocolo_notivisa">Protocolo NOTIVISA <span class="text-danger">*</span></label>
+                            <input type="text" name="protocolo_notivisa" id="protocolo_notivisa" class="form-control" maxlength="50" required
+                                   value="{{ $evento->protocolo_notivisa }}">
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="notificado_anvisa_em">Data da notificação</label>
+                            <input type="date" name="notificado_anvisa_em" id="notificado_anvisa_em" class="form-control"
+                                   max="{{ today()->toDateString() }}"
+                                   value="{{ $evento->notificado_anvisa_em?->toDateString() ?? today()->toDateString() }}">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Voltar</button>
+                        <button type="submit" class="btn btn-primary">Registrar</button>
                     </div>
                 </form>
             </div>

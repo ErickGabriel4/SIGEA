@@ -149,4 +149,25 @@ class TriagemController extends Controller
 
         return back()->with('sucesso', 'Devolutiva registrada.');
     }
+
+    /** Registra o protocolo NOTIVISA informado manualmente pelo gestor (UC22). */
+    public function registrarNotivisa(Request $request, EventoAdverso $evento)
+    {
+        $request->validate(
+            [
+                'protocolo_notivisa' => ['required', 'string', 'max:50'],
+                'notificado_anvisa_em' => ['nullable', 'date', 'before_or_equal:today'],
+            ],
+            [],
+            ['protocolo_notivisa' => 'protocolo NOTIVISA', 'notificado_anvisa_em' => 'data da notificação']
+        );
+
+        $this->notivisa->registrarProtocolo(
+            $evento,
+            $request->input('protocolo_notivisa'),
+            $request->input('notificado_anvisa_em')
+        );
+
+        return back()->with('sucesso', 'Protocolo NOTIVISA registrado.');
+    }
 }

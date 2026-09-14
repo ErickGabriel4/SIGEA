@@ -6,9 +6,9 @@ use App\Enums\ClassificacaoIncidente;
 use App\Models\EventoAdverso;
 
 /**
- * Elegibilidade de notificação compulsória à ANVISA/NOTIVISA.
- * O sistema apenas sinaliza a obrigação — o registro do protocolo e a
- * integração com a API do NOTIVISA ficam para uma etapa futura.
+ * Elegibilidade de notificação compulsória à ANVISA/NOTIVISA (Seção 6.4).
+ * O sistema apenas sinaliza a obrigação e registra o protocolo manualmente —
+ * a integração com a API do NOTIVISA está fora de escopo.
  */
 class NotivisaService
 {
@@ -33,5 +33,14 @@ class NotivisaService
         }
 
         return $evento;
+    }
+
+    /** Registra o protocolo NOTIVISA informado manualmente pelo gestor. */
+    public function registrarProtocolo(EventoAdverso $evento, string $protocolo, ?string $data = null): void
+    {
+        $evento->forceFill([
+            'protocolo_notivisa' => $protocolo,
+            'notificado_anvisa_em' => $data ?? today(),
+        ])->save();
     }
 }
