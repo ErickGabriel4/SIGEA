@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AcaoCorretivaController;
+use App\Http\Controllers\Admin\AuditoriaController;
 use App\Http\Controllers\Admin\CategoriaEventoController;
 use App\Http\Controllers\Admin\ConfiguracaoController;
 use App\Http\Controllers\Admin\SetorController;
@@ -152,6 +153,10 @@ Route::middleware('auth')->group(function () {
         // ── Parâmetros do sistema (T20) ────────────────────────────────
         Route::get('/configuracoes', [ConfiguracaoController::class, 'index'])->name('configuracoes.index');
         Route::put('/configuracoes', [ConfiguracaoController::class, 'update'])->name('configuracoes.update');
+
+        // ── Trilha de auditoria (T21) ───────────────────────────────────
+        Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
+        Route::get('/auditoria/{log}', [AuditoriaController::class, 'show'])->name('auditoria.show');
     });
 });
 

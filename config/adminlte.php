@@ -401,6 +401,12 @@ return [
             'icon' => 'fas fa-fw fa-sliders-h',
             'can' => 'configuracao.gerenciar',
         ],
+        [
+            'text' => 'Auditoria',
+            'route' => 'admin.auditoria.index',
+            'icon' => 'fas fa-fw fa-history',
+            'can' => 'auditoria.ver',
+        ],
     ],
 
     /*

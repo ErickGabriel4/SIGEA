@@ -8,13 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Setor hospitalar — local de ocorrência dos eventos e lotação dos usuários.
  */
 class Setor extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $table = 'setores';
 
@@ -58,5 +60,14 @@ class Setor extends Model
     public function scopeAtivos($query)
     {
         return $query->where('ativo', true);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['nome', 'sigla', 'tipo', 'responsavel_id', 'leitos', 'ativo'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('setor');
     }
 }

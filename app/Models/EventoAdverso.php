@@ -19,13 +19,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Evento adverso — entidade central do SIGEA.
  */
 class EventoAdverso extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $table = 'eventos_adversos';
 
@@ -209,5 +211,18 @@ class EventoAdverso extends Model
     public function pendenteNotivisa(): bool
     {
         return $this->notificavel_anvisa && blank($this->protocolo_notivisa);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'status', 'classificacao', 'grau_dano', 'evitabilidade',
+                'probabilidade', 'severidade', 'nivel_risco', 'prioridade',
+                'prazo_conclusao', 'gestor_responsavel_id', 'protocolo_notivisa',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('evento_adverso');
     }
 }

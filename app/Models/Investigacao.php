@@ -9,13 +9,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Investigação de causa raiz — relação 1:1 com o evento adverso.
  */
 class Investigacao extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $table = 'investigacoes';
 
@@ -78,5 +80,14 @@ class Investigacao extends Model
             && $this->status !== StatusInvestigacao::Cancelada
             && $this->data_prevista !== null
             && $this->data_prevista->isPast();
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'metodo', 'responsavel_id', 'causa_raiz', 'data_conclusao'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('investigacao');
     }
 }

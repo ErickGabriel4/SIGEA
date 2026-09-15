@@ -6,12 +6,16 @@ use App\Enums\TipoConfiguracao;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Parâmetro de configuração do sistema (SLAs, instituição, regras).
  */
 class Configuracao extends Model
 {
+    use LogsActivity;
+
     protected $table = 'configuracoes';
 
     protected $fillable = [
@@ -70,5 +74,14 @@ class Configuracao extends Model
     protected static function booted(): void
     {
         static::saved(fn (self $config) => Cache::forget("config.{$config->chave}"));
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['chave', 'valor'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('configuracao');
     }
 }

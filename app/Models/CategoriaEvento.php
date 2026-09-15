@@ -7,13 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Categoria de evento — taxonomia hierárquica de 2 níveis alinhada à ICPS/WHO.
  */
 class CategoriaEvento extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $table = 'categorias_evento';
 
@@ -70,5 +72,14 @@ class CategoriaEvento extends Model
     public function getNomeCompletoAttribute(): string
     {
         return "{$this->codigo} — {$this->nome}";
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['codigo', 'nome', 'categoria_pai_id', 'notificavel_anvisa', 'exige_investigacao', 'ativo'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('categoria_evento');
     }
 }

@@ -10,13 +10,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Ação corretiva/preventiva decorrente da tratativa do evento.
  */
 class AcaoCorretiva extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $table = 'acoes_corretivas';
 
@@ -91,5 +93,14 @@ class AcaoCorretiva extends Model
         }
 
         return $this->data_conclusao->lte($this->prazo);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['titulo', 'status', 'responsavel_id', 'prazo', 'data_conclusao', 'eficacia'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('acao_corretiva');
     }
 }
