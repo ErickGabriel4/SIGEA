@@ -13,6 +13,7 @@ use App\Http\Controllers\EventoAnexoController;
 use App\Http\Controllers\InvestigacaoCausaController;
 use App\Http\Controllers\InvestigacaoController;
 use App\Http\Controllers\NotificacaoController;
+use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\TriagemController;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +36,11 @@ Route::get('/', function () {
 });
 
 Route::middleware('auth')->group(function () {
+    // ── Perfil do usuário (T23) ──────────────────────────────────────────
+    Route::get('/perfil', [PerfilController::class, 'edit'])->name('perfil.edit');
+    Route::put('/perfil', [PerfilController::class, 'update'])->name('perfil.update');
+    Route::put('/perfil/senha', [PerfilController::class, 'atualizarSenha'])->name('perfil.senha');
+
     // ── Painel (T03) — permission:dashboard.ver ─────────────────────────
     Route::middleware('permission:dashboard.ver')->prefix('painel')->name('painel.')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('index');
