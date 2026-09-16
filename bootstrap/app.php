@@ -13,6 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Atrás do proxy do Railway: confia nos cabeçalhos X-Forwarded-* para que
+        // a aplicação reconheça o esquema HTTPS e gere URLs e cookies corretos.
+        $middleware->trustProxies(at: '*');
+
         // Cabeçalhos de segurança e registro de último acesso em todas as rotas web
         $middleware->web(append: [
             SecurityHeaders::class,
