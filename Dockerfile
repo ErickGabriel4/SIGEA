@@ -19,9 +19,19 @@ RUN npm run build
 # ───────────────── Estágio 2: dependências PHP (Composer) ─────────────
 FROM php:8.3-cli-alpine AS vendor
 
-RUN apk add --no-cache git unzip \
- && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS icu-dev libzip-dev \
- && docker-php-ext-install -j"$(nproc)" zip intl bcmath \
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+# As mesmas extensões do runtime: o Composer valida os requisitos de
+# plataforma do composer.lock (phpoffice/phpspreadsheet exige ext-gd).
+# Bibliotecas de runtime entram como pacotes explícitos para que o
+# `apk del` das dependências de build não as remova junto.
+RUN apk add --no-cache \
+      git unzip \
+      icu-libs libzip libpng libjpeg-turbo freetype \
+ && apk add --no-cache --virtual .build-deps \
+      $PHPIZE_DEPS icu-dev libzip-dev libpng-dev libjpeg-turbo-dev freetype-dev \
+ && docker-php-ext-configure gd --with-freetype --with-jpeg \
+ && docker-php-ext-install -j"$(nproc)" zip intl bcmath gd \
  && apk del .build-deps
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
