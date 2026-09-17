@@ -75,8 +75,9 @@ COPY --from=assets /app/public/build /app/public/build
 COPY docker/nginx.conf       /etc/nginx/http.d/default.conf.template
 COPY docker/supervisord.conf /etc/supervisord.conf
 COPY docker/entrypoint.sh    /usr/local/bin/entrypoint
+COPY docker/pre-deploy.sh    /usr/local/bin/pre-deploy
 
-RUN chmod +x /usr/local/bin/entrypoint \
+RUN chmod +x /usr/local/bin/entrypoint /usr/local/bin/pre-deploy \
  && rm -f /etc/nginx/http.d/default.conf \
  && chown -R www-data:www-data /app/storage /app/bootstrap/cache
 
