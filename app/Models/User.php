@@ -18,7 +18,7 @@ use Spatie\Permission\Traits\HasRoles;
  */
 class User extends Authenticatable
 {
-    use HasFactory, HasRoles, Notifiable, SoftDeletes, LogsActivity;
+    use HasFactory, Notifiable, HasRoles, SoftDeletes, LogsActivity;
 
     protected $fillable = [
         'nome',
@@ -50,6 +50,16 @@ class User extends Authenticatable
         ];
     }
 
+    /** Configuração da trilha de auditoria (spatie/laravel-activitylog). */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['nome', 'email', 'matricula', 'cargo', 'setor_id', 'ativo'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('usuario');
+    }
+
     // ── Relacionamentos ────────────────────────────────────────────────
 
     public function setor(): BelongsTo
@@ -62,19 +72,25 @@ class User extends Authenticatable
         return $this->hasMany(EventoAdverso::class, 'notificante_id');
     }
 
+    public function eventosGerenciados(): HasMany
+    {
+        return $this->hasMany(EventoAdverso::class, 'gestor_responsavel_id');
+    }
+
+    public function investigacoes(): HasMany
+    {
+        return $this->hasMany(Investigacao::class, 'responsavel_id');
+    }
+
+    public function acoesResponsavel(): HasMany
+    {
+        return $this->hasMany(AcaoCorretiva::class, 'responsavel_id');
+    }
+
     // ── Escopos ────────────────────────────────────────────────────────
 
     public function scopeAtivos($query)
     {
         return $query->where('ativo', true);
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['nome', 'email', 'matricula', 'cargo', 'setor_id', 'ativo'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('usuario');
     }
 }

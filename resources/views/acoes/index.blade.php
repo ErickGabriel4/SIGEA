@@ -1,4 +1,4 @@
-{{-- Lista geral de ações corretivas --}}
+{{-- T13 — Lista geral de ações corretivas --}}
 @extends('layouts.app')
 
 @section('title', 'Ações Corretivas · SIGEA')
@@ -88,6 +88,12 @@
                                 @endcan
                             </td>
                         </tr>
+
+                        @can('avaliar', $acao)
+                            <tr class="d-none"><td colspan="9" class="p-0 border-0">
+                                {{-- linha invisível apenas para manter o modal dentro da tabela válida --}}
+                            </td></tr>
+                        @endcan
                     @empty
                         <tr><td colspan="9" class="text-center text-muted py-4">Nenhuma ação encontrada.</td></tr>
                     @endforelse

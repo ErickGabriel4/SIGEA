@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * Anexos do evento — upload e download autenticado (storage privado).
+ * Atende ao objetivo específico (e) do TCC.
  */
 class EventoAnexoController extends Controller
 {
@@ -56,6 +57,7 @@ class EventoAnexoController extends Controller
 
         abort_unless($anexo->evento_adverso_id === $evento->id, 404);
 
+        // Notificador só remove anexos enviados por ele mesmo
         if (! $request->user()->can('evento.ver_todos') && $anexo->user_id !== $request->user()->id) {
             abort(403);
         }

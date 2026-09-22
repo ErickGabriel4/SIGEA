@@ -33,7 +33,7 @@ class InvestigacaoPolicy
             && $investigacao->status !== StatusInvestigacao::Cancelada;
     }
 
-    /** Concluir exige ao menos uma causa marcada como raiz. */
+    /** Concluir exige ≥1 causa raiz e ≥1 ação corretiva (regra UC09/UC10). */
     public function concluir(User $usuario, Investigacao $investigacao): bool
     {
         return $this->update($usuario, $investigacao) && $investigacao->podeConcluir();

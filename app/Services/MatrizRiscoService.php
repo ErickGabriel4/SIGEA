@@ -10,7 +10,7 @@ use App\Models\EventoAdverso;
 use Carbon\Carbon;
 
 /**
- * Matriz de risco 5×5: score = probabilidade × severidade.
+ * Matriz de risco 5×5: score = probabilidade × severidade (Seção 6.2 / Quadro A.13).
  */
 class MatrizRiscoService
 {
@@ -28,7 +28,7 @@ class MatrizRiscoService
         return $probabilidade * $severidade;
     }
 
-    /** Deriva o nível de risco a partir do score. */
+    /** Deriva o nível de risco a partir do score (faixas do Quadro A.13). */
     public function nivelPorScore(int $score): NivelRisco
     {
         return match (true) {
@@ -87,7 +87,7 @@ class MatrizRiscoService
         return $evento;
     }
 
-    /** Prioridade final considerando as regras de exceção. */
+    /** Prioridade final considerando as regras de exceção (Seção 6.2). */
     public function prioridadeCorrigida(EventoAdverso $evento, NivelRisco $nivel): Prioridade
     {
         $danoCritico = $evento->grau_dano instanceof GrauDano && $evento->grau_dano->ehGraveOuObito();

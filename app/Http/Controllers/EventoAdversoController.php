@@ -7,7 +7,6 @@ use App\Exceptions\TransicaoInvalidaException;
 use App\Exports\EventosExport;
 use App\Http\Requests\EventoAdversoRequest;
 use App\Models\CategoriaEvento;
-use App\Models\Configuracao;
 use App\Models\EventoAdverso;
 use App\Models\Setor;
 use App\Models\User;
@@ -15,19 +14,20 @@ use App\Services\PseudonimizadorService;
 use App\Services\WorkflowEventoService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 /**
- * Registro e acompanhamento de eventos adversos (T04 a T08).
+ * Registro e acompanhamento de eventos adversos.
  * Atende ao objetivo específico (e) do TCC — desenvolver a plataforma com
  * registro, classificação e acompanhamento de eventos adversos.
  */
 class EventoAdversoController extends Controller
 {
     public function __construct(
-        private readonly PseudonimizadorService $pseudonimizador,
         private readonly WorkflowEventoService $workflow,
+        private readonly PseudonimizadorService $pseudonimizador,
     ) {
     }
 
@@ -53,6 +53,8 @@ class EventoAdversoController extends Controller
             ->when($request->filled('prioridade'), fn ($q) => $q->where('prioridade', $request->string('prioridade')))
             ->when($request->filled('nivel_risco'), fn ($q) => $q->where('nivel_risco', $request->string('nivel_risco')))
             ->when($request->filled('gestor_id'), fn ($q) => $q->where('gestor_responsavel_id', $request->integer('gestor_id')))
+            ->when($request->filled('probabilidade'), fn ($q) => $q->where('probabilidade', $request->integer('probabilidade')))
+            ->when($request->filled('severidade'), fn ($q) => $q->where('severidade', $request->integer('severidade')))
             ->noPeriodo($request->input('inicio'), $request->input('fim'))
             ->orderByDesc('created_at')
             ->paginate(15)
@@ -94,29 +96,44 @@ class EventoAdversoController extends Controller
 
         $dados = $request->validated();
         $anonima = (bool) ($dados['anonima'] ?? false);
-
-        // Notificação anônima não passa por rascunho: vai direto ao NSP
         $enviar = $request->input('acao_formulario') === 'enviar' || $anonima;
 
         $evento = DB::transaction(function () use ($request, $dados, $anonima) {
-            $evento = EventoAdverso::create([
-                ...collect($dados)->except(['profissionais', 'anonima'])->all(),
+            $evento = new EventoAdverso([
+                ...collect($dados)->except(['profissionais', 'anexos', 'anonima'])->all(),
                 'anonima' => $anonima,
                 'notificante_id' => $anonima ? null : $request->user()->id,
-                'setor_notificante_id' => $anonima ? null : $request->user()->setor_id,
+                'setor_notificante_id' => $request->user()->setor_id,
                 'paciente_codigo' => $this->pseudonimizador->codificar($dados['paciente_codigo'] ?? null),
                 'status' => StatusEvento::Rascunho,
             ]);
 
+            // Anonimato: nenhum registro de autoria na trilha de auditoria
+            if ($anonima) {
+                $evento->disableLogging();
+            }
+
+            $evento->save();
+
             foreach ($dados['profissionais'] ?? [] as $profissional) {
                 $evento->profissionais()->create($profissional);
+            }
+
+            foreach ($request->file('anexos', []) as $arquivo) {
+                $this->salvarAnexo($evento, $arquivo, $anonima ? null : $request->user()->id);
             }
 
             return $evento;
         });
 
         if ($enviar) {
-            $this->enviarAoNucleo($evento, $anonima ? null : $request->user());
+            $this->workflow->transicionar(
+                $evento,
+                StatusEvento::Notificado,
+                $anonima ? null : $request->user(),
+                null,
+                'envio'
+            );
 
             return view('eventos.confirmacao', ['evento' => $evento, 'anonima' => $anonima]);
         }
@@ -133,8 +150,9 @@ class EventoAdversoController extends Controller
 
         $evento->load([
             'categoria.pai', 'setorOcorrencia', 'setorNotificante', 'notificante',
-            'profissionais.usuario', 'anexos.usuario', 'historico.usuario',
-            'investigacao.responsavel', 'acoesCorretivas.responsavel',
+            'gestorResponsavel', 'profissionais.usuario', 'anexos',
+            'historico.usuario', 'investigacao.causas', 'investigacao.responsavel',
+            'acoesCorretivas.responsavel',
         ]);
 
         $comentarios = $evento->comentarios()
@@ -142,7 +160,10 @@ class EventoAdversoController extends Controller
             ->with('autor')
             ->get();
 
-        return view('eventos.show', ['evento' => $evento, 'comentarios' => $comentarios]);
+        return view('eventos.show', [
+            'evento' => $evento,
+            'comentarios' => $comentarios,
+        ]);
     }
 
     /** T08 — Edição de rascunho (mesmo wizard, pré-preenchido). */
@@ -150,7 +171,7 @@ class EventoAdversoController extends Controller
     {
         $this->authorize('update', $evento);
 
-        $evento->load('profissionais');
+        $evento->load(['profissionais', 'anexos']);
 
         return view('eventos.edit', ['evento' => $evento] + $this->dadosFormulario());
     }
@@ -162,21 +183,25 @@ class EventoAdversoController extends Controller
 
         $dados = $request->validated();
 
-        DB::transaction(function () use ($dados, $evento) {
-            $evento->update([
-                ...collect($dados)->except(['profissionais', 'anonima'])->all(),
+        DB::transaction(function () use ($request, $dados, $evento) {
+            $evento->fill([
+                ...collect($dados)->except(['profissionais', 'anexos', 'anonima'])->all(),
                 'paciente_codigo' => $this->pseudonimizador->codificar($dados['paciente_codigo'] ?? null),
             ]);
+            $evento->save();
 
             $evento->profissionais()->delete();
-
             foreach ($dados['profissionais'] ?? [] as $profissional) {
                 $evento->profissionais()->create($profissional);
+            }
+
+            foreach ($request->file('anexos', []) as $arquivo) {
+                $this->salvarAnexo($evento, $arquivo, $request->user()->id);
             }
         });
 
         if ($request->input('acao_formulario') === 'enviar') {
-            $this->enviarAoNucleo($evento, $request->user());
+            $this->workflow->transicionar($evento, StatusEvento::Notificado, $request->user(), null, 'envio');
 
             return view('eventos.confirmacao', ['evento' => $evento, 'anonima' => false]);
         }
@@ -203,12 +228,16 @@ class EventoAdversoController extends Controller
     {
         $this->authorize('enviar', $evento);
 
-        $this->enviarAoNucleo($evento, $request->user());
+        try {
+            $this->workflow->transicionar($evento, StatusEvento::Notificado, $request->user(), null, 'envio');
+        } catch (TransicaoInvalidaException $e) {
+            return back()->with('erro', $e->getMessage());
+        }
 
         return view('eventos.confirmacao', ['evento' => $evento, 'anonima' => false]);
     }
 
-    /** Cancela o evento (rascunho do dono, ou em triagem por um gestor). */
+    /** Cancela evento (rascunho pelo dono; triagem pelo gestor, com justificativa). */
     public function cancelar(Request $request, EventoAdverso $evento)
     {
         $this->authorize('cancelar', $evento);
@@ -232,7 +261,7 @@ class EventoAdversoController extends Controller
         }
 
         return redirect()
-            ->route('eventos.show', $evento)
+            ->route('eventos.index')
             ->with('sucesso', "Evento {$evento->protocolo} cancelado.");
     }
 
@@ -263,12 +292,6 @@ class EventoAdversoController extends Controller
             ->download("evento_{$evento->protocolo}.pdf");
     }
 
-    /** Transição rascunho → notificado: encaminha o evento ao NSP. */
-    private function enviarAoNucleo(EventoAdverso $evento, ?User $usuario): void
-    {
-        $this->workflow->transicionar($evento, StatusEvento::Notificado, $usuario, null, 'envio');
-    }
-
     /** Dados comuns aos formulários do wizard. */
     private function dadosFormulario(): array
     {
@@ -276,7 +299,21 @@ class EventoAdversoController extends Controller
             'categoriasRaiz' => CategoriaEvento::raizes()->ativas()->with('filhas')->get(),
             'setores' => Setor::ativos()->orderBy('nome')->get(),
             'usuarios' => User::ativos()->orderBy('nome')->get(['id', 'nome', 'categoria_profissional']),
-            'permiteAnonima' => (bool) Configuracao::obter('permite_notificacao_anonima', true),
+            'permiteAnonima' => (bool) \App\Models\Configuracao::obter('permite_notificacao_anonima', true),
         ];
+    }
+
+    /** Armazena um anexo no storage privado com nome randomizado. */
+    private function salvarAnexo(EventoAdverso $evento, $arquivo, ?int $userId): void
+    {
+        $caminho = $arquivo->store("privado/eventos/{$evento->id}", 'local');
+
+        $evento->anexos()->create([
+            'user_id' => $userId,
+            'nome_original' => $arquivo->getClientOriginalName(),
+            'caminho' => $caminho,
+            'mime' => $arquivo->getMimeType(),
+            'tamanho' => $arquivo->getSize(),
+        ]);
     }
 }

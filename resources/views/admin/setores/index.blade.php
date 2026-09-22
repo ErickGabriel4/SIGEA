@@ -23,7 +23,7 @@
                         <th>Tipo</th>
                         <th>Responsável</th>
                         <th class="text-right">Leitos</th>
-                        <th class="text-right">Lotados</th>
+                        <th class="text-right">Eventos</th>
                         <th>Situação</th>
                         <th class="text-right"></th>
                     </tr>
@@ -36,7 +36,7 @@
                             <td>{{ $setor->tipo->label() }}</td>
                             <td>{{ $setor->responsavel->nome ?? '—' }}</td>
                             <td class="text-right">{{ $setor->leitos ?? '—' }}</td>
-                            <td class="text-right">{{ $setor->usuarios_count }}</td>
+                            <td class="text-right">{{ $setor->eventos_count }}</td>
                             <td><span class="badge badge-{{ $setor->ativo ? 'success' : 'secondary' }}">{{ $setor->ativo ? 'Ativo' : 'Inativo' }}</span></td>
                             <td class="text-right text-nowrap">
                                 <a href="{{ route('admin.setores.edit', $setor) }}" class="btn btn-outline-primary btn-sm" title="Editar">

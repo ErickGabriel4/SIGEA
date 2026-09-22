@@ -1,4 +1,4 @@
-{{-- Abertura de investigação para o evento --}}
+{{-- Abertura de investigação para o evento (UC09) --}}
 @extends('layouts.app')
 
 @section('title', 'Nova Investigação · SIGEA')

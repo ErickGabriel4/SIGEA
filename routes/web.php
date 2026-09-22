@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Route;
  * (spatie/laravel-permission) ou Policy.
  */
 
-// Raiz: convidado → login; gestor → painel; notificador → suas notificações
+// Raiz: convidado → login; autenticado → destino conforme o perfil
 Route::get('/', function () {
     if (! auth()->check()) {
         return redirect()->route('login');
@@ -36,12 +36,13 @@ Route::get('/', function () {
 });
 
 Route::middleware('auth')->group(function () {
-    // ── Perfil do usuário (T23) ──────────────────────────────────────────
+
+    // ── Perfil do usuário (T23) ────────────────────────────────────────
     Route::get('/perfil', [PerfilController::class, 'edit'])->name('perfil.edit');
     Route::put('/perfil', [PerfilController::class, 'update'])->name('perfil.update');
     Route::put('/perfil/senha', [PerfilController::class, 'atualizarSenha'])->name('perfil.senha');
 
-    // ── Painel (T03) — permission:dashboard.ver ─────────────────────────
+    // ── Dashboard (T03) — permission:dashboard.ver ─────────────────────
     Route::middleware('permission:dashboard.ver')->prefix('painel')->name('painel.')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('index');
 
@@ -62,8 +63,7 @@ Route::middleware('auth')->group(function () {
             ->middleware('permission:evento.criar')->name('create');
         Route::post('/', [EventoAdversoController::class, 'store'])
             ->middleware('permission:evento.criar')->name('store');
-        Route::get('/meus', [EventoAdversoController::class, 'meus'])
-            ->middleware('permission:evento.ver_proprios')->name('meus');
+        Route::get('/meus', [EventoAdversoController::class, 'meus'])->name('meus');
         Route::get('/exportar', [EventoAdversoController::class, 'exportar'])
             ->middleware('permission:evento.exportar')->name('exportar');
 
@@ -75,7 +75,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/{evento}/cancelar', [EventoAdversoController::class, 'cancelar'])->name('cancelar');
         Route::get('/{evento}/pdf', [EventoAdversoController::class, 'pdf'])->name('pdf');
 
-        // ── Comentários e anexos (objetivo específico e) ────────────────
         Route::post('/{evento}/comentarios', [ComentarioController::class, 'store'])->name('comentario.store');
 
         Route::post('/{evento}/anexos', [EventoAnexoController::class, 'store'])->name('anexo.store');
@@ -83,7 +82,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{evento}/anexos/{anexo}', [EventoAnexoController::class, 'destroy'])->name('anexo.destroy');
     });
 
-    // ── Triagem (T09/T10) — permission:evento.triar ─────────────────────
+    // ── Triagem (T09/T10) — permission:evento.triar ────────────────────
     Route::middleware('permission:evento.triar')->prefix('triagem')->name('triagem.')->group(function () {
         Route::get('/', [TriagemController::class, 'index'])->name('index');
         Route::post('/{evento}/assumir', [TriagemController::class, 'assumir'])->name('assumir');
@@ -96,7 +95,7 @@ Route::middleware('auth')->group(function () {
             ->middleware('permission:notivisa.gerenciar')->name('notivisa');
     });
 
-    // ── Investigações de causa raiz (T11/T12) — permission:investigacao.gerenciar ──
+    // ── Investigações (T11/T12) — permission:investigacao.gerenciar ────
     Route::middleware('permission:investigacao.gerenciar')->group(function () {
         Route::get('/investigacoes', [InvestigacaoController::class, 'index'])->name('investigacoes.index');
         Route::get('/eventos/{evento}/investigacao/nova', [InvestigacaoController::class, 'create'])->name('investigacoes.create');
@@ -111,18 +110,26 @@ Route::middleware('auth')->group(function () {
         Route::delete('/investigacoes/{investigacao}/causas/{causa}', [InvestigacaoCausaController::class, 'destroy'])->name('causas.destroy');
     });
 
-    // ── Ações corretivas (T13–T15) ───────────────────────────────────────
+    // ── Ações corretivas (T13–T15) ─────────────────────────────────────
     Route::prefix('acoes')->name('acoes.')->group(function () {
-        Route::get('/', [AcaoCorretivaController::class, 'index'])->name('index');
-        Route::get('/minhas', [AcaoCorretivaController::class, 'minhas'])->name('minhas');
-        Route::get('/{acao}/editar', [AcaoCorretivaController::class, 'edit'])->name('edit');
-        Route::put('/{acao}', [AcaoCorretivaController::class, 'update'])->name('update');
-        Route::delete('/{acao}', [AcaoCorretivaController::class, 'destroy'])->name('destroy');
+        Route::get('/', [AcaoCorretivaController::class, 'index'])
+            ->middleware('permission:acao.gerenciar')->name('index');
+        Route::get('/minhas', [AcaoCorretivaController::class, 'minhas'])
+            ->middleware('permission:acao.executar')->name('minhas');
+        Route::get('/{acao}/editar', [AcaoCorretivaController::class, 'edit'])
+            ->middleware('permission:acao.gerenciar')->name('edit');
+        Route::put('/{acao}', [AcaoCorretivaController::class, 'update'])
+            ->middleware('permission:acao.gerenciar')->name('update');
         Route::post('/{acao}/concluir', [AcaoCorretivaController::class, 'concluir'])->name('concluir');
-        Route::post('/{acao}/avaliar', [AcaoCorretivaController::class, 'avaliar'])->name('avaliar');
+        Route::post('/{acao}/avaliar', [AcaoCorretivaController::class, 'avaliar'])
+            ->middleware('permission:acao.gerenciar')->name('avaliar');
+        Route::delete('/{acao}', [AcaoCorretivaController::class, 'destroy'])
+            ->middleware('permission:acao.gerenciar')->name('destroy');
     });
-    Route::get('/eventos/{evento}/acoes/nova', [AcaoCorretivaController::class, 'create'])->name('acoes.create');
-    Route::post('/eventos/{evento}/acoes', [AcaoCorretivaController::class, 'store'])->name('acoes.store');
+    Route::get('/eventos/{evento}/acoes/nova', [AcaoCorretivaController::class, 'create'])
+        ->middleware('permission:acao.gerenciar')->name('acoes.create');
+    Route::post('/eventos/{evento}/acoes', [AcaoCorretivaController::class, 'store'])
+        ->middleware('permission:acao.gerenciar')->name('acoes.store');
 
     // ── Relatórios (T16) — permission:relatorio.ver ────────────────────
     Route::middleware('permission:relatorio.ver')->prefix('relatorios')->name('relatorios.')->group(function () {
@@ -143,7 +150,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/marcar-todas', [NotificacaoController::class, 'marcarTodas'])->name('todas');
     });
 
-    // ── Administração (T17/T18) — role:administrador ───────────────────
+    // ── Administração (T17–T21) — role:administrador ───────────────────
     Route::middleware('role:administrador')->prefix('admin')->name('admin.')->group(function () {
         Route::post('/usuarios/{usuario}/alternar-status', [UsuarioController::class, 'alternarStatus'])
             ->name('usuarios.alternar-status');
@@ -152,18 +159,15 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('setores', SetorController::class)->except(['show']);
 
-        // ── Taxonomia de categorias (T19) ──────────────────────────────
         Route::resource('categorias', CategoriaEventoController::class)
             ->except(['show'])->parameters(['categorias' => 'categoria']);
 
-        // ── Parâmetros do sistema (T20) ────────────────────────────────
         Route::get('/configuracoes', [ConfiguracaoController::class, 'index'])->name('configuracoes.index');
         Route::put('/configuracoes', [ConfiguracaoController::class, 'update'])->name('configuracoes.update');
 
-        // ── Trilha de auditoria (T21) ───────────────────────────────────
         Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
         Route::get('/auditoria/{log}', [AuditoriaController::class, 'show'])->name('auditoria.show');
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

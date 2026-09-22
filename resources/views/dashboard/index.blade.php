@@ -1,4 +1,4 @@
-{{-- T03 — Painel de indicadores (UC15). --}}
+{{-- T03 — Painel de indicadores (UC15). Objetivo específico (f) do TCC. --}}
 @extends('layouts.app')
 
 @section('title', 'Painel · SIGEA')

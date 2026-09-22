@@ -49,9 +49,6 @@
     <div class="d-flex justify-content-between small">
         <span>
             <strong>SIGEA</strong> — Sistema Integrado de Gestão de Eventos Adversos · v1.0
-            @if ($instituicao = \App\Models\Configuracao::obter('nome_instituicao'))
-                · {{ $instituicao }}
-            @endif
         </span>
         <span>
             TCC — Tecnologia em Análise e Desenvolvimento de Sistemas · IFSP Câmpus Campinas · Dados exclusivamente simulados

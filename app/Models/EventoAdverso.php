@@ -94,6 +94,19 @@ class EventoAdverso extends Model
         ];
     }
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'status', 'classificacao', 'grau_dano', 'evitabilidade',
+                'probabilidade', 'severidade', 'nivel_risco', 'prioridade',
+                'prazo_conclusao', 'gestor_responsavel_id', 'protocolo_notivisa',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('evento_adverso');
+    }
+
     // ── Relacionamentos ────────────────────────────────────────────────
 
     public function notificante(): BelongsTo
@@ -121,26 +134,6 @@ class EventoAdverso extends Model
         return $this->belongsTo(Setor::class, 'setor_notificante_id');
     }
 
-    public function profissionais(): HasMany
-    {
-        return $this->hasMany(EventoProfissional::class);
-    }
-
-    public function historico(): HasMany
-    {
-        return $this->hasMany(EventoHistorico::class)->orderBy('created_at');
-    }
-
-    public function anexos(): HasMany
-    {
-        return $this->hasMany(EventoAnexo::class);
-    }
-
-    public function comentarios(): MorphMany
-    {
-        return $this->morphMany(Comentario::class, 'comentavel')->orderByDesc('created_at');
-    }
-
     public function investigacao(): HasOne
     {
         return $this->hasOne(Investigacao::class);
@@ -149,6 +142,26 @@ class EventoAdverso extends Model
     public function acoesCorretivas(): HasMany
     {
         return $this->hasMany(AcaoCorretiva::class);
+    }
+
+    public function profissionais(): HasMany
+    {
+        return $this->hasMany(EventoProfissional::class);
+    }
+
+    public function anexos(): HasMany
+    {
+        return $this->hasMany(EventoAnexo::class);
+    }
+
+    public function historico(): HasMany
+    {
+        return $this->hasMany(EventoHistorico::class)->orderBy('created_at');
+    }
+
+    public function comentarios(): MorphMany
+    {
+        return $this->morphMany(Comentario::class, 'comentavel')->orderByDesc('created_at');
     }
 
     // ── Escopos ────────────────────────────────────────────────────────
@@ -177,24 +190,10 @@ class EventoAdverso extends Model
 
     // ── Acessores auxiliares ───────────────────────────────────────────
 
-    /** Classificação completa: pré-condição para encaminhar a triagem. */
-    public function classificacaoCompleta(): bool
-    {
-        return $this->categoria_evento_id !== null
-            && $this->classificacao !== null
-            && $this->grau_dano !== null
-            && $this->evitabilidade !== null
-            && $this->evitabilidade !== Evitabilidade::NaoAvaliado
-            && $this->probabilidade !== null
-            && $this->severidade !== null;
-    }
-
     /** Situação do prazo: verde (no prazo), amarelo (próximo), vermelho (estourado). */
     public function getSituacaoPrazoAttribute(): ?string
     {
-        if ($this->prazo_conclusao === null
-            || $this->status === StatusEvento::Concluido
-            || $this->status === StatusEvento::Cancelado) {
+        if ($this->prazo_conclusao === null || $this->status === StatusEvento::Concluido || $this->status === StatusEvento::Cancelado) {
             return null;
         }
 
@@ -207,22 +206,21 @@ class EventoAdverso extends Model
         return $this->prazo_conclusao->diffInDays(now()) <= $dias ? 'amarelo' : 'verde';
     }
 
+    /** Classificação completa exigida para encaminhar a triagem (Seção 6.1). */
+    public function classificacaoCompleta(): bool
+    {
+        return $this->categoria_evento_id !== null
+            && $this->classificacao !== null
+            && $this->grau_dano !== null
+            && $this->evitabilidade !== null
+            && $this->evitabilidade !== Evitabilidade::NaoAvaliado
+            && $this->probabilidade !== null
+            && $this->severidade !== null;
+    }
+
     /** Pendente de registro do protocolo NOTIVISA. */
     public function pendenteNotivisa(): bool
     {
         return $this->notificavel_anvisa && blank($this->protocolo_notivisa);
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly([
-                'status', 'classificacao', 'grau_dano', 'evitabilidade',
-                'probabilidade', 'severidade', 'nivel_risco', 'prioridade',
-                'prazo_conclusao', 'gestor_responsavel_id', 'protocolo_notivisa',
-            ])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('evento_adverso');
     }
 }

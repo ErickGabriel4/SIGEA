@@ -13,7 +13,7 @@ use App\Services\WorkflowEventoService;
 use Illuminate\Http\Request;
 
 /**
- * Investigação e análise de causa raiz (T11/T12).
+ * Investigação e análise de causa raiz (T11/T12 — UC09/UC10).
  * Atende ao objetivo específico (e) do TCC.
  */
 class InvestigacaoController extends Controller
@@ -84,7 +84,10 @@ class InvestigacaoController extends Controller
     {
         $this->authorize('view', $investigacao);
 
-        $investigacao->load(['evento.categoria.pai', 'evento.setorOcorrencia', 'causas', 'responsavel']);
+        $investigacao->load([
+            'evento.categoria.pai', 'evento.setorOcorrencia',
+            'causas', 'responsavel', 'acoesCorretivas.responsavel',
+        ]);
 
         return view('investigacoes.show', ['investigacao' => $investigacao]);
     }
@@ -114,13 +117,13 @@ class InvestigacaoController extends Controller
     }
 
     /**
-     * Conclui a investigação — bloqueada sem ao menos uma causa raiz.
+     * Conclui a investigação — bloqueada sem ≥1 causa raiz e ≥1 ação corretiva.
      * Move o evento para aguardando_acao.
      */
     public function concluir(Request $request, Investigacao $investigacao)
     {
         if (! $investigacao->podeConcluir()) {
-            return back()->with('erro', 'Para concluir é necessário marcar ao menos uma causa como raiz.');
+            return back()->with('erro', 'Para concluir é necessário marcar ao menos uma causa raiz e cadastrar ao menos uma ação corretiva.');
         }
 
         $this->authorize('concluir', $investigacao);

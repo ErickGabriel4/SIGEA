@@ -14,15 +14,14 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * Ações corretivas: cadastro, execução e avaliação de eficácia.
+ * Ações corretivas: cadastro, execução e avaliação de eficácia (T13–T15).
+ * Atende ao objetivo específico (e) do TCC.
  */
 class AcaoCorretivaController extends Controller
 {
-    /** Lista geral de ações (gestores). */
+    /** T13 — Lista geral de ações (gestores). */
     public function index(Request $request)
     {
-        $this->authorize('viewAny', AcaoCorretiva::class);
-
         $acoes = AcaoCorretiva::query()
             ->with(['evento', 'responsavel', 'setor'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
@@ -41,11 +40,9 @@ class AcaoCorretivaController extends Controller
         ]);
     }
 
-    /** Minhas ações (responsável). */
+    /** T14 — Minhas ações (responsável). */
     public function minhas(Request $request)
     {
-        $this->authorize('viewAny', AcaoCorretiva::class);
-
         $acoes = AcaoCorretiva::query()
             ->doResponsavel($request->user())
             ->with(['evento'])
@@ -56,7 +53,7 @@ class AcaoCorretivaController extends Controller
         return view('acoes.minhas', ['acoes' => $acoes]);
     }
 
-    /** Formulário de nova ação para um evento. */
+    /** T15 — Formulário de nova ação para um evento. */
     public function create(EventoAdverso $evento)
     {
         $this->authorize('create', AcaoCorretiva::class);
@@ -107,6 +104,7 @@ class AcaoCorretivaController extends Controller
 
         $acao->update($request->validated());
 
+        // Prazo futuro reabilita ação anteriormente atrasada
         if ($acao->status === StatusAcao::Atrasada && $acao->prazo->isFuture()) {
             $acao->update(['status' => StatusAcao::EmAndamento]);
         }
@@ -120,17 +118,15 @@ class AcaoCorretivaController extends Controller
             ->with('sucesso', 'Ação corretiva atualizada.');
     }
 
-    /** Conclusão exige evidência obrigatória. */
+    /** Conclusão exige evidência obrigatória (US21). */
     public function concluir(Request $request, AcaoCorretiva $acao)
     {
         $this->authorize('concluir', $acao);
 
         $request->validate(
             ['evidencia_conclusao' => ['required', 'string', 'min:10', 'max:5000']],
-            [
-                'evidencia_conclusao.required' => 'A evidência de execução é obrigatória para concluir a ação.',
-                'evidencia_conclusao.min' => 'Descreva a evidência com mais detalhes (mínimo 10 caracteres).',
-            ],
+            ['evidencia_conclusao.required' => 'A evidência de execução é obrigatória para concluir a ação.',
+             'evidencia_conclusao.min' => 'Descreva a evidência com mais detalhes (mínimo 10 caracteres).'],
             ['evidencia_conclusao' => 'evidência de conclusão']
         );
 
@@ -143,7 +139,7 @@ class AcaoCorretivaController extends Controller
         return back()->with('sucesso', "Ação \"{$acao->titulo}\" concluída.");
     }
 
-    /** Avaliação de eficácia pelo gestor. */
+    /** Avaliação de eficácia pelo gestor (US22). */
     public function avaliar(Request $request, AcaoCorretiva $acao)
     {
         $this->authorize('avaliar', $acao);

@@ -38,6 +38,15 @@ class Setor extends Model
         ];
     }
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['nome', 'sigla', 'tipo', 'responsavel_id', 'leitos', 'ativo'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('setor');
+    }
+
     // ── Relacionamentos ────────────────────────────────────────────────
 
     public function responsavel(): BelongsTo
@@ -60,14 +69,5 @@ class Setor extends Model
     public function scopeAtivos($query)
     {
         return $query->where('ativo', true);
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['nome', 'sigla', 'tipo', 'responsavel_id', 'leitos', 'ativo'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('setor');
     }
 }

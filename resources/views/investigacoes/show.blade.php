@@ -1,4 +1,4 @@
-{{-- T12 — Investigação: 5 Porquês / Ishikawa com diagrama SVG --}}
+{{-- T12 — Investigação: 5 Porquês / Ishikawa com diagrama SVG (UC09/UC10) --}}
 @extends('layouts.app')
 
 @php($evento = $investigacao->evento)
@@ -41,7 +41,7 @@
                     </a>
                     <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#modal-concluir"
                             @disabled(! $investigacao->podeConcluir())
-                            title="{{ $investigacao->podeConcluir() ? '' : 'Marque ao menos uma causa como raiz para concluir.' }}">
+                            title="{{ $investigacao->podeConcluir() ? '' : 'Marque ao menos uma causa raiz e cadastre ao menos uma ação corretiva para concluir.' }}">
                         <i class="fas fa-flag-checkered mr-1"></i> Concluir investigação
                     </button>
                 @endif
@@ -142,7 +142,7 @@
             </div>
         </div>
 
-        {{-- Diagrama + conclusão --}}
+        {{-- Diagrama + conclusão + ações --}}
         <div class="col-lg-7">
             <div class="card">
                 <div class="card-header"><h3 class="card-title">Diagrama de causa e efeito (espinha de peixe)</h3></div>
@@ -165,6 +165,36 @@
                     </dl>
                 </div>
             </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title">Ações corretivas decorrentes</h3>
+                    @can('acao.gerenciar')
+                        <a href="{{ route('acoes.create', $evento) }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus mr-1"></i> Nova ação
+                        </a>
+                    @endcan
+                </div>
+                <div class="card-body table-responsive p-0">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr><th>Título</th><th>Responsável</th><th>Prazo</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($investigacao->acoesCorretivas as $acao)
+                                <tr>
+                                    <td>{{ $acao->titulo }}</td>
+                                    <td>{{ $acao->responsavel->nome }}</td>
+                                    <td>{{ $acao->prazo->format('d/m/Y') }}</td>
+                                    <td><span class="badge badge-{{ $acao->status->cor() }}">{{ $acao->status->label() }}</span></td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="4" class="text-center text-muted py-3">Nenhuma ação cadastrada — obrigatória para concluir a investigação.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -179,7 +209,8 @@
                 </div>
                 <div class="modal-body">
                     <p class="small text-muted">
-                        Ao concluir, o evento passa para <strong>aguardando ação</strong>.
+                        Ao concluir, o evento passa para <strong>aguardando ação</strong> e as ações corretivas
+                        cadastradas seguem para execução.
                     </p>
                     <div class="form-group">
                         <label for="causa_raiz">Síntese da causa raiz <span class="text-danger">*</span></label>

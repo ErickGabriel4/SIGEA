@@ -9,11 +9,13 @@ use App\Exceptions\TransicaoInvalidaException;
 use App\Models\EventoAdverso;
 use App\Models\EventoHistorico;
 use App\Models\User;
+use App\Notifications\EventoTransicionado;
+use App\Notifications\NovoEventoNotificado;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Máquina de estados do evento adverso.
- * Toda transição válida grava linha em evento_historico.
+ * Máquina de estados do evento adverso (Seção 6.1).
+ * Toda transição válida grava linha em evento_historico e notifica os envolvidos.
  */
 class WorkflowEventoService
 {
@@ -23,12 +25,15 @@ class WorkflowEventoService
         'notificado' => ['em_triagem'],
         'em_triagem' => ['em_investigacao', 'aguardando_acao', 'concluido', 'cancelado'],
         'em_investigacao' => ['aguardando_acao'],
-        'aguardando_acao' => ['concluido'],
+        'aguardando_acao' => ['concluido', 'em_investigacao'],
+        'concluido' => ['em_investigacao'],
     ];
 
     /** Transições que exigem justificativa obrigatória. */
     private const EXIGEM_JUSTIFICATIVA = [
         'em_triagem:cancelado',
+        'aguardando_acao:em_investigacao',
+        'concluido:em_investigacao',
     ];
 
     /**
@@ -64,6 +69,8 @@ class WorkflowEventoService
                 'observacao' => $observacao,
             ]);
 
+            $this->notificarEnvolvidos($evento, $novoStatus, $acao);
+
             return $evento;
         });
     }
@@ -74,7 +81,7 @@ class WorkflowEventoService
         return in_array($para->value, self::TRANSICOES[$de->value] ?? [], true);
     }
 
-    /** Pré-condições de negócio de cada transição. */
+    /** Pré-condições de negócio de cada transição (tabela da Seção 6.1). */
     private function validarPreCondicoes(
         EventoAdverso $evento,
         StatusEvento $de,
@@ -106,13 +113,15 @@ class WorkflowEventoService
                 $de, $para, 'Conclusão direta permitida apenas para near miss ou circunstância notificável sem dano.'
             ),
             'em_investigacao:aguardando_acao' => $this->exigir(
-                $evento->investigacao?->status === \App\Enums\StatusInvestigacao::Concluida,
-                $de, $para, 'A investigação deve estar concluída.'
+                $evento->investigacao?->status === \App\Enums\StatusInvestigacao::Concluida
+                    && $evento->acoesCorretivas()->exists(),
+                $de, $para, 'A investigação deve estar concluída e deve existir ao menos uma ação corretiva.'
             ),
             'aguardando_acao:concluido' => $this->exigir(
-                $evento->acoesCorretivas()->exists()
-                    && ! $evento->acoesCorretivas()->whereNotIn('status', ['concluida', 'cancelada'])->exists(),
-                $de, $para, 'Deve haver ao menos uma ação corretiva e todas devem estar concluídas ou canceladas.'
+                ! $evento->acoesCorretivas()
+                    ->whereNotIn('status', ['concluida', 'cancelada'])
+                    ->exists(),
+                $de, $para, 'Todas as ações corretivas devem estar concluídas ou canceladas.'
             ),
             default => null,
         };
@@ -135,5 +144,32 @@ class WorkflowEventoService
             StatusEvento::Concluido => $evento->concluido_em = now(),
             default => null,
         };
+
+        // Reabertura limpa o marco de conclusão
+        if ($novo === StatusEvento::EmInvestigacao && $evento->concluido_em !== null) {
+            $evento->concluido_em = null;
+        }
+    }
+
+    /**
+     * Notifica o notificante (exceto anônimas) e o gestor responsável;
+     * ao entrar em "notificado", alerta todos os gestores de segurança.
+     */
+    private function notificarEnvolvidos(EventoAdverso $evento, StatusEvento $novo, string $acao): void
+    {
+        if ($novo === StatusEvento::Notificado) {
+            $gestores = User::ativos()->permission('evento.triar')->get();
+            foreach ($gestores as $gestor) {
+                $gestor->notify(new NovoEventoNotificado($evento));
+            }
+        }
+
+        if (! $evento->anonima && $evento->notificante !== null) {
+            $evento->notificante->notify(new EventoTransicionado($evento, $acao));
+        }
+
+        if ($evento->gestorResponsavel !== null) {
+            $evento->gestorResponsavel->notify(new EventoTransicionado($evento, $acao));
+        }
     }
 }

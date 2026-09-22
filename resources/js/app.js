@@ -19,48 +19,6 @@ window.SigeaCores = {
 };
 
 /*
- * Wizard de notificação (T04): navegação entre passos com validação HTML5.
- */
-window.SigeaWizard = {
-    passoAtual: 1,
-    total: 4,
-
-    irPara(passo) {
-        document.querySelectorAll('.wizard-passo').forEach((p) => p.classList.add('d-none'));
-        const alvo = document.getElementById('wizard-passo-' + passo);
-        if (alvo) alvo.classList.remove('d-none');
-
-        document.querySelectorAll('.stepper .passo').forEach((s, i) => {
-            s.classList.toggle('ativo', i + 1 === passo);
-            s.classList.toggle('concluido', i + 1 < passo);
-        });
-
-        this.passoAtual = passo;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        if (passo === this.total && typeof window.montarRevisao === 'function') {
-            window.montarRevisao();
-        }
-    },
-
-    avancar() {
-        const passoEl = document.getElementById('wizard-passo-' + this.passoAtual);
-        const campos = passoEl.querySelectorAll('input, select, textarea');
-        for (const campo of campos) {
-            if (!campo.checkValidity()) {
-                campo.reportValidity();
-                return;
-            }
-        }
-        if (this.passoAtual < this.total) this.irPara(this.passoAtual + 1);
-    },
-
-    voltar() {
-        if (this.passoAtual > 1) this.irPara(this.passoAtual - 1);
-    },
-};
-
-/*
  * Cálculo da matriz de risco em tempo real (tela de triagem — T10).
  * Elementos esperados: #probabilidade, #severidade, #score-risco,
  * #nivel-risco, #prioridade (select), #prazo_conclusao (input date).
@@ -113,6 +71,11 @@ window.calcularRisco = function () {
         prazo.setDate(prazo.getDate() + sla);
         prazoEl.value = prazo.toISOString().slice(0, 10);
     }
+
+    // Destaca a célula correspondente na matriz visual
+    document.querySelectorAll('.matriz-risco .celula').forEach((c) => c.classList.remove('celula-selecionada'));
+    const celula = document.querySelector(`.matriz-risco .celula[data-prob="${prob}"][data-sev="${sev}"]`);
+    if (celula) celula.classList.add('celula-selecionada');
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -130,6 +93,48 @@ document.addEventListener('DOMContentLoaded', () => {
         window.calcularRisco();
     }
 });
+
+/*
+ * Wizard de notificação (T04): navegação entre passos com validação HTML5.
+ */
+window.SigeaWizard = {
+    passoAtual: 1,
+    total: 4,
+
+    irPara(passo) {
+        document.querySelectorAll('.wizard-passo').forEach((p) => p.classList.add('d-none'));
+        const alvo = document.getElementById('wizard-passo-' + passo);
+        if (alvo) alvo.classList.remove('d-none');
+
+        document.querySelectorAll('.stepper .passo').forEach((s, i) => {
+            s.classList.toggle('ativo', i + 1 === passo);
+            s.classList.toggle('concluido', i + 1 < passo);
+        });
+
+        this.passoAtual = passo;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        if (passo === this.total && typeof window.montarRevisao === 'function') {
+            window.montarRevisao();
+        }
+    },
+
+    avancar() {
+        const passoEl = document.getElementById('wizard-passo-' + this.passoAtual);
+        const campos = passoEl.querySelectorAll('input, select, textarea');
+        for (const campo of campos) {
+            if (!campo.checkValidity()) {
+                campo.reportValidity();
+                return;
+            }
+        }
+        if (this.passoAtual < this.total) this.irPara(this.passoAtual + 1);
+    },
+
+    voltar() {
+        if (this.passoAtual > 1) this.irPara(this.passoAtual - 1);
+    },
+};
 
 /*
  * Diagrama de Ishikawa em SVG (T12), desenhado a partir das causas cadastradas.

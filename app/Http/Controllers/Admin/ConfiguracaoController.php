@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\TipoConfiguracao;
 use App\Http\Controllers\Controller;
 use App\Models\Configuracao;
 use Illuminate\Http\Request;
@@ -35,11 +34,11 @@ class ConfiguracaoController extends Controller
             $valor = $valores[$config->chave];
 
             // Booleanos vêm de checkbox: ausente = false
-            if ($config->tipo === TipoConfiguracao::Booleano) {
+            if ($config->tipo === \App\Enums\TipoConfiguracao::Booleano) {
                 $valor = filter_var($valor, FILTER_VALIDATE_BOOLEAN) ? '1' : '0';
             }
 
-            if ($config->tipo === TipoConfiguracao::Inteiro && ! is_numeric($valor)) {
+            if ($config->tipo === \App\Enums\TipoConfiguracao::Inteiro && ! is_numeric($valor)) {
                 continue;
             }
 

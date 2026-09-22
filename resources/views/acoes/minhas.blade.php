@@ -1,4 +1,4 @@
-{{-- Minhas ações (responsável); conclusão exige evidência --}}
+{{-- T14 — Minhas ações (responsável); conclusão exige evidência (US21) --}}
 @extends('layouts.app')
 
 @section('title', 'Minhas Ações · SIGEA')
@@ -66,6 +66,8 @@
                             <div class="form-group mb-0">
                                 <label for="evidencia-{{ $acao->id }}">
                                     Evidência de execução <span class="text-danger">*</span>
+                                    <i class="fas fa-info-circle text-muted" data-toggle="tooltip"
+                                       title="Descreva a comprovação: ata de treinamento, foto arquivada, protocolo alterado, registro no sistema…" aria-hidden="true"></i>
                                 </label>
                                 <textarea name="evidencia_conclusao" id="evidencia-{{ $acao->id }}" class="form-control"
                                           rows="3" minlength="10" required

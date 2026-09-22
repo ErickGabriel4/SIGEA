@@ -1,20 +1,18 @@
-{{-- T07 — Detalhe do evento (UC05) --}}
+{{-- T07 — Detalhe do evento com abas (UC05) --}}
 @extends('layouts.app')
 
 @section('title', $evento->protocolo . ' · SIGEA')
 @section('titulo', 'Evento ' . $evento->protocolo)
 @section('breadcrumb')
-    <li class="breadcrumb-item">
-        <a href="{{ auth()->user()->can('evento.ver_todos') ? route('eventos.index') : route('eventos.meus') }}">Eventos</a>
-    </li>
+    <li class="breadcrumb-item"><a href="{{ auth()->user()->can('evento.ver_todos') ? route('eventos.index') : route('eventos.meus') }}">Eventos</a></li>
     <li class="breadcrumb-item active">{{ $evento->protocolo }}</li>
 @endsection
 
-@php($abaAtiva = request('aba', 'resumo'))
 @php($ehGestor = auth()->user()->can('evento.ver_todos'))
+@php($abaAtiva = request('aba', 'resumo'))
 
 @section('conteudo')
-    {{-- Alerta NOTIVISA fixo (UC22) --}}
+    {{-- Alerta NOTIVISA fixo (UC22 / FA4) --}}
     @if ($ehGestor && $evento->pendenteNotivisa())
         <div class="alert alert-danger" role="alert">
             <i class="fas fa-bullhorn mr-1"></i>
@@ -36,13 +34,18 @@
                 <div>
                     <x-badge-status :status="$evento->status" />
                     <x-badge-dano :dano="$evento->grau_dano" />
+                    <x-badge-risco :nivel="$evento->nivel_risco" :score="$evento->score_risco" />
                     <x-badge-prioridade :prioridade="$evento->prioridade" />
                     @if ($evento->anonima)
                         <span class="badge badge-secondary"><i class="fas fa-user-secret mr-1"></i>Anônima</span>
                     @endif
+                    @if ($evento->notificavel_anvisa)
+                        <span class="badge badge-danger">ANVISA</span>
+                    @endif
                 </div>
             </div>
             <div class="mt-2 mt-md-0">
+                {{-- Botões contextuais ao status e ao perfil --}}
                 <a href="{{ route('eventos.pdf', $evento) }}" class="btn btn-outline-secondary btn-sm">
                     <i class="far fa-file-pdf mr-1"></i> PDF
                 </a>
@@ -114,7 +117,6 @@
             <ul class="nav nav-tabs" role="tablist">
                 @foreach ([
                     'resumo' => 'Resumo',
-                    'envolvidos' => 'Envolvidos',
                     'classificacao' => 'Classificação',
                     'investigacao' => 'Investigação',
                     'acoes' => 'Ações corretivas',
@@ -156,10 +158,7 @@
                         </dd>
 
                         <dt class="col-sm-3">Setor / local</dt>
-                        <dd class="col-sm-9">
-                            {{ $evento->setorOcorrencia->nome }}
-                            @if ($evento->local_especifico) — {{ $evento->local_especifico }} @endif
-                        </dd>
+                        <dd class="col-sm-9">{{ $evento->setorOcorrencia->nome }} @if ($evento->local_especifico) — {{ $evento->local_especifico }} @endif</dd>
 
                         <dt class="col-sm-3">Categoria</dt>
                         <dd class="col-sm-9">
@@ -175,22 +174,13 @@
 
                         <dt class="col-sm-3">Ação imediata</dt>
                         <dd class="col-sm-9">{{ $evento->acao_imediata ?? '—' }}</dd>
-                    </dl>
-                </div>
 
-                {{-- ── Envolvidos ── --}}
-                <div class="tab-pane fade @if ($abaAtiva === 'envolvidos') show active @endif" id="aba-envolvidos" role="tabpanel">
-                    <dl class="row">
                         <dt class="col-sm-3">Paciente</dt>
                         <dd class="col-sm-9">
                             @if ($evento->paciente_envolvido)
                                 Código: <code>{{ $evento->paciente_codigo ?? '—' }}</code>
                                 · {{ $evento->paciente_faixa_etaria?->label() ?? 'Faixa etária não informada' }}
                                 · {{ $evento->paciente_sexo?->label() ?? 'Sexo não informado' }}
-                                <small class="d-block text-muted">
-                                    <i class="fas fa-shield-alt text-success mr-1"></i>
-                                    Identificador pseudonimizado — nome, CPF e prontuário nunca são armazenados (LGPD).
-                                </small>
                             @else
                                 Sem paciente envolvido
                             @endif
@@ -206,6 +196,13 @@
                                 —
                             @endforelse
                         </dd>
+
+                        @if ($evento->feedback_notificante)
+                            <dt class="col-sm-3">Devolutiva ao notificante</dt>
+                            <dd class="col-sm-9">
+                                <div class="callout callout-success mb-0">{{ $evento->feedback_notificante }}</div>
+                            </dd>
+                        @endif
                     </dl>
                 </div>
 
@@ -238,10 +235,6 @@
                                             <span class="badge badge-danger">Pendente de registro</span>
                                         @endif
                                     </dd>
-                                @endif
-                                @if ($evento->feedback_notificante)
-                                    <dt class="col-sm-5">Devolutiva ao notificante</dt>
-                                    <dd class="col-sm-7">{{ $evento->feedback_notificante }}</dd>
                                 @endif
                             </dl>
                         </div>
@@ -429,7 +422,7 @@
                     @endforelse
                 </div>
 
-                {{-- ── Histórico ── --}}
+                {{-- ── Histórico (timeline) ── --}}
                 <div class="tab-pane fade @if ($abaAtiva === 'historico') show active @endif" id="aba-historico" role="tabpanel">
                     <div class="timeline">
                         @foreach ($evento->historico as $registro)
@@ -458,34 +451,30 @@
         </div>
     </div>
 
-    {{-- Modal de cancelamento --}}
-    @can('cancelar', $evento)
-        <div class="modal fade" id="modal-cancelar" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <form method="POST" action="{{ route('eventos.cancelar', $evento) }}" class="modal-content">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">Cancelar evento {{ $evento->protocolo }}</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar"><span aria-hidden="true">&times;</span></button>
+    {{-- Modal cancelamento (prevenção de erro — confirmação + justificativa) --}}
+    <div class="modal fade" id="modal-cancelar" tabindex="-1" role="dialog" aria-labelledby="titulo-modal-cancelar" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form method="POST" action="{{ route('eventos.cancelar', $evento) }}" class="modal-content">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="titulo-modal-cancelar">Cancelar evento {{ $evento->protocolo }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <p>Esta ação encerra o evento sem tratativa. Informe a justificativa (ex.: duplicidade, registro indevido).</p>
+                    <div class="form-group mb-0">
+                        <label for="justificativa">Justificativa @if ($evento->status !== \App\Enums\StatusEvento::Rascunho)<span class="text-danger">*</span>@endif</label>
+                        <textarea name="justificativa" id="justificativa" class="form-control" rows="3"
+                                  @if ($evento->status !== \App\Enums\StatusEvento::Rascunho) required @endif></textarea>
                     </div>
-                    <div class="modal-body">
-                        <div class="form-group mb-0">
-                            <label for="justificativa-cancelar">
-                                Justificativa @if ($evento->status !== \App\Enums\StatusEvento::Rascunho) <span class="text-danger">*</span> @endif
-                            </label>
-                            <textarea name="justificativa" id="justificativa-cancelar" class="form-control" rows="3"
-                                      @if ($evento->status !== \App\Enums\StatusEvento::Rascunho) required @endif
-                                      placeholder="Ex.: duplicidade do EA-2026-000123"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Voltar</button>
-                        <button type="submit" class="btn btn-danger">Confirmar cancelamento</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Voltar</button>
+                    <button type="submit" class="btn btn-danger">Confirmar cancelamento</button>
+                </div>
+            </form>
         </div>
-    @endcan
+    </div>
 
     {{-- Modal NOTIVISA --}}
     @can('notivisa.gerenciar')

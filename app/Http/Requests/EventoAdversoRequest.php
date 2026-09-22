@@ -49,6 +49,8 @@ class EventoAdversoRequest extends FormRequest
 
             // Passo 4 — Revisão e envio
             'anonima' => ['sometimes', 'boolean'],
+            'anexos' => ['nullable', 'array', 'max:5'],
+            'anexos.*' => ['file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,docx,xlsx'],
         ];
     }
 
@@ -67,6 +69,7 @@ class EventoAdversoRequest extends FormRequest
             'paciente_codigo' => 'identificador do paciente',
             'paciente_faixa_etaria' => 'faixa etária',
             'paciente_sexo' => 'sexo do paciente',
+            'anexos.*' => 'anexo',
         ];
     }
 
@@ -75,6 +78,8 @@ class EventoAdversoRequest extends FormRequest
         return [
             'descricao.min' => 'A descrição deve ter no mínimo 30 caracteres — relate o ocorrido com detalhes.',
             'data_ocorrencia.before_or_equal' => 'A data da ocorrência não pode ser futura.',
+            'anexos.*.max' => 'Cada anexo deve ter no máximo 10 MB.',
+            'anexos.*.mimes' => 'Anexos permitidos: PDF, JPG, PNG, DOCX ou XLSX.',
             'profissionais.*.user_id.required_without' => 'Informe o profissional cadastrado ou o nome externo.',
             'profissionais.*.nome_externo.required_without' => 'Informe o profissional cadastrado ou o nome externo.',
         ];

@@ -17,7 +17,7 @@ class SetorController extends Controller
     {
         $setores = Setor::query()
             ->with('responsavel')
-            ->withCount('usuarios')
+            ->withCount('eventos')
             ->orderBy('nome')
             ->paginate(15);
 
@@ -60,7 +60,7 @@ class SetorController extends Controller
     /** Exclusão lógica; impedida quando o setor está em uso. */
     public function destroy(Setor $setore)
     {
-        if ($setore->usuarios()->exists()) {
+        if ($setore->eventos()->exists() || $setore->usuarios()->exists()) {
             return back()->with('erro', 'Setor em uso não pode ser excluído — inative-o.');
         }
 

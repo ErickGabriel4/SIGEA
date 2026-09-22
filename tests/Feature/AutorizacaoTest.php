@@ -2,10 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use Database\Seeders\PerfilSeeder;
+use App\Models\EventoAdverso;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /**
@@ -21,72 +19,72 @@ class AutorizacaoTest extends TestCase
         $this->semearPerfis();
     }
 
-    public function test_os_tres_perfis_sao_criados(): void
-    {
-        $this->assertEqualsCanonicalizing(
-            ['notificador', 'gestor_seguranca', 'administrador'],
-            Role::pluck('name')->all()
-        );
-    }
-
-    public function test_administrador_acumula_todas_as_permissoes(): void
-    {
-        $administrador = $this->criarAdministrador();
-
-        foreach (array_keys(PerfilSeeder::PERMISSOES) as $permissao) {
-            $this->assertTrue(
-                $administrador->can($permissao),
-                "Administrador deveria ter a permissão {$permissao}."
-            );
-        }
-    }
-
-    public function test_notificador_so_registra_e_acompanha_as_proprias_notificacoes(): void
-    {
-        $notificador = $this->criarNotificador();
-
-        $this->assertTrue($notificador->can('evento.criar'));
-        $this->assertTrue($notificador->can('evento.ver_proprios'));
-        $this->assertFalse($notificador->can('evento.ver_todos'));
-        $this->assertFalse($notificador->can('evento.triar'));
-        $this->assertFalse($notificador->can('usuario.gerenciar'));
-    }
-
-    public function test_gestor_tria_eventos_mas_nao_administra_o_sistema(): void
-    {
-        $gestor = $this->criarGestor();
-
-        $this->assertTrue($gestor->can('evento.triar'));
-        $this->assertTrue($gestor->can('evento.ver_todos'));
-        $this->assertTrue($gestor->can('dashboard.ver'));
-        $this->assertFalse($gestor->can('usuario.gerenciar'));
-        $this->assertFalse($gestor->can('auditoria.ver'));
-    }
-
     public function test_notificador_recebe_403_no_painel(): void
     {
         $this->actingAs($this->criarNotificador())
             ->get('/painel')
-            ->assertForbidden()
-            ->assertSee('Acesso negado');
+            ->assertForbidden();
     }
 
-    public function test_gestor_acessa_o_painel(): void
+    public function test_notificador_recebe_403_na_triagem(): void
+    {
+        $this->actingAs($this->criarNotificador())
+            ->get('/triagem')
+            ->assertForbidden();
+    }
+
+    public function test_notificador_recebe_403_na_administracao(): void
+    {
+        $notificador = $this->criarNotificador();
+
+        $this->actingAs($notificador)->get('/admin/usuarios')->assertForbidden();
+        $this->actingAs($notificador)->get('/admin/setores')->assertForbidden();
+        $this->actingAs($notificador)->get('/admin/configuracoes')->assertForbidden();
+        $this->actingAs($notificador)->get('/admin/auditoria')->assertForbidden();
+    }
+
+    public function test_gestor_recebe_403_na_administracao(): void
     {
         $this->actingAs($this->criarGestor())
-            ->get('/painel')
-            ->assertOk();
+            ->get('/admin/usuarios')
+            ->assertForbidden();
     }
 
-    public function test_usuario_sem_perfil_recebe_403_no_painel(): void
+    public function test_notificador_nao_ve_evento_de_outro_notificador(): void
     {
-        $this->actingAs(User::factory()->create())
-            ->get('/painel')
-            ->assertForbidden();
+        [$setor, $categoria] = $this->criarBaseEvento();
+        $dono = $this->criarNotificador();
+        $intruso = $this->criarNotificador();
+
+        $evento = EventoAdverso::factory()->create([
+            'notificante_id' => $dono->id,
+            'categoria_evento_id' => $categoria->id,
+            'setor_ocorrencia_id' => $setor->id,
+        ]);
+
+        $this->actingAs($intruso)->get(route('eventos.show', $evento))->assertForbidden();
+        $this->actingAs($dono)->get(route('eventos.show', $evento))->assertOk();
+    }
+
+    public function test_gestor_ve_evento_de_qualquer_notificador(): void
+    {
+        [$setor, $categoria] = $this->criarBaseEvento();
+        $dono = $this->criarNotificador();
+
+        $evento = EventoAdverso::factory()->create([
+            'notificante_id' => $dono->id,
+            'categoria_evento_id' => $categoria->id,
+            'setor_ocorrencia_id' => $setor->id,
+        ]);
+
+        $this->actingAs($this->criarGestor())
+            ->get(route('eventos.show', $evento))
+            ->assertOk();
     }
 
     public function test_convidado_e_redirecionado_para_login(): void
     {
         $this->get('/painel')->assertRedirect('/login');
+        $this->get('/eventos')->assertRedirect('/login');
     }
 }

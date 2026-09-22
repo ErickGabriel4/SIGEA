@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 
 /**
  * Painel de indicadores de segurança do paciente (T03 — UC15).
+ * Atende ao objetivo específico (f) do TCC — implementar painéis de
+ * visualização e análise.
  */
 class DashboardController extends Controller
 {
@@ -69,7 +71,7 @@ class DashboardController extends Controller
         return response()->json($this->indicadores->matrizRisco($this->filtros($request)));
     }
 
-    /** JSON — os indicadores da Seção 6.6. */
+    /** JSON — os 7 indicadores da Seção 6.6. */
     public function indicadores(Request $request)
     {
         return response()->json($this->indicadores->calcular($this->filtros($request)));

@@ -1,4 +1,4 @@
-{{-- T10 — Formulário de triagem: relato à esquerda, classificação à direita --}}
+{{-- T10 — Formulário de triagem: relato à esquerda, classificação à direita (UC06/UC07/UC08) --}}
 @extends('layouts.app')
 
 @section('title', 'Triagem ' . $evento->protocolo . ' · SIGEA')

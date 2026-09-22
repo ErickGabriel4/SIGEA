@@ -45,6 +45,15 @@ class Investigacao extends Model
         ];
     }
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'metodo', 'responsavel_id', 'causa_raiz', 'data_conclusao'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('investigacao');
+    }
+
     // ── Relacionamentos ────────────────────────────────────────────────
 
     public function evento(): BelongsTo
@@ -62,15 +71,18 @@ class Investigacao extends Model
         return $this->hasMany(InvestigacaoCausa::class)->orderBy('categoria')->orderBy('ordem');
     }
 
+    public function acoesCorretivas(): HasMany
+    {
+        return $this->hasMany(AcaoCorretiva::class);
+    }
+
     // ── Regras auxiliares ──────────────────────────────────────────────
 
-    /**
-     * Pode ser concluída: exige ao menos uma causa marcada como raiz.
-     * A exigência de ação corretiva cadastrada entra quando essa etapa existir.
-     */
+    /** Pode ser concluída: exige ≥1 causa raiz e ≥1 ação corretiva (UC09/UC10). */
     public function podeConcluir(): bool
     {
-        return $this->causas()->where('eh_causa_raiz', true)->exists();
+        return $this->causas()->where('eh_causa_raiz', true)->exists()
+            && $this->acoesCorretivas()->exists();
     }
 
     /** Em atraso em relação à data prevista. */
@@ -80,14 +92,5 @@ class Investigacao extends Model
             && $this->status !== StatusInvestigacao::Cancelada
             && $this->data_prevista !== null
             && $this->data_prevista->isPast();
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['status', 'metodo', 'responsavel_id', 'causa_raiz', 'data_conclusao'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('investigacao');
     }
 }

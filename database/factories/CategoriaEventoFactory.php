@@ -2,11 +2,10 @@
 
 namespace Database\Factories;
 
-use App\Models\CategoriaEvento;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<CategoriaEvento>
+ * @extends Factory<\App\Models\CategoriaEvento>
  */
 class CategoriaEventoFactory extends Factory
 {
@@ -14,7 +13,7 @@ class CategoriaEventoFactory extends Factory
     {
         return [
             'codigo' => strtoupper(fake()->unique()->lexify('???.##')),
-            'nome' => 'Categoria '.fake()->unique()->words(2, true),
+            'nome' => 'Categoria ' . fake()->unique()->words(2, true),
             'descricao' => fake()->sentence(),
             'categoria_pai_id' => null,
             'codigo_icps' => null,

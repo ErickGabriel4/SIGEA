@@ -39,6 +39,15 @@ class CategoriaEvento extends Model
         ];
     }
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['codigo', 'nome', 'categoria_pai_id', 'notificavel_anvisa', 'exige_investigacao', 'ativo'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('categoria_evento');
+    }
+
     // ── Relacionamentos ────────────────────────────────────────────────
 
     public function pai(): BelongsTo
@@ -72,14 +81,5 @@ class CategoriaEvento extends Model
     public function getNomeCompletoAttribute(): string
     {
         return "{$this->codigo} — {$this->nome}";
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['codigo', 'nome', 'categoria_pai_id', 'notificavel_anvisa', 'exige_investigacao', 'ativo'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('categoria_evento');
     }
 }

@@ -6,6 +6,7 @@
 
 <form method="POST"
       action="{{ $edicao ? route('eventos.update', $evento) : route('eventos.store') }}"
+      enctype="multipart/form-data"
       class="wizard-form"
       id="form-notificacao">
     @csrf
@@ -244,6 +245,22 @@
                 <div class="callout callout-info" id="resumo-revisao">
                     <p class="text-muted mb-0">Preencha os passos anteriores para ver o resumo.</p>
                 </div>
+
+                <div class="form-group">
+                    <label for="anexos">Anexos (opcional)</label>
+                    <input type="file" name="anexos[]" id="anexos" class="form-control-file" multiple
+                           accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx">
+                    <small class="form-text text-muted">Até 5 arquivos de 10 MB cada — PDF, JPG, PNG, DOCX ou XLSX.</small>
+                </div>
+
+                @if ($edicao && $evento->anexos->isNotEmpty())
+                    <p class="mb-1"><strong>Anexos já enviados:</strong></p>
+                    <ul class="small">
+                        @foreach ($evento->anexos as $anexo)
+                            <li>{{ $anexo->nome_original }} ({{ $anexo->tamanho_legivel }})</li>
+                        @endforeach
+                    </ul>
+                @endif
 
                 @if (! $edicao && ($permiteAnonima ?? true))
                     <hr>

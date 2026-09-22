@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Enums\TipoConfiguracao;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -33,30 +32,38 @@ class Configuracao extends Model
         ];
     }
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['chave', 'valor'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('configuracao');
+    }
+
     /**
      * Obtém o valor tipado de um parâmetro, com cache de 10 minutos.
-     *
-     * Só valores escalares vão para o cache: guardar o próprio model quebra
-     * nos drivers que serializam (banco, arquivo, Redis).
      */
     public static function obter(string $chave, mixed $padrao = null): mixed
     {
-        $config = Cache::remember("config.{$chave}", now()->addMinutes(10), function () use ($chave) {
-            $registro = DB::table('configuracoes')->where('chave', $chave)->first(['valor', 'tipo']);
+        return Cache::remember(
+            "config.{$chave}",
+            now()->addMinutes(10),
+            function () use ($chave, $padrao) {
+                $config = static::where('chave', $chave)->first();
 
-            return $registro === null ? [] : (array) $registro;
-        });
+                if ($config === null) {
+                    return $padrao;
+                }
 
-        if ($config === []) {
-            return $padrao;
-        }
-
-        return match (TipoConfiguracao::tryFrom($config['tipo'])) {
-            TipoConfiguracao::Inteiro => (int) $config['valor'],
-            TipoConfiguracao::Booleano => filter_var($config['valor'], FILTER_VALIDATE_BOOLEAN),
-            TipoConfiguracao::Json => json_decode($config['valor'], true),
-            default => $config['valor'],
-        };
+                return match ($config->tipo) {
+                    TipoConfiguracao::Inteiro => (int) $config->valor,
+                    TipoConfiguracao::Booleano => filter_var($config->valor, FILTER_VALIDATE_BOOLEAN),
+                    TipoConfiguracao::Json => json_decode($config->valor, true),
+                    default => $config->valor,
+                };
+            }
+        );
     }
 
     /**
@@ -74,14 +81,5 @@ class Configuracao extends Model
     protected static function booted(): void
     {
         static::saved(fn (self $config) => Cache::forget("config.{$config->chave}"));
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['chave', 'valor'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('configuracao');
     }
 }

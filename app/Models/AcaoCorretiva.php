@@ -48,6 +48,15 @@ class AcaoCorretiva extends Model
         ];
     }
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['titulo', 'status', 'responsavel_id', 'prazo', 'data_conclusao', 'eficacia'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('acao_corretiva');
+    }
+
     // ── Relacionamentos ────────────────────────────────────────────────
 
     public function evento(): BelongsTo
@@ -85,7 +94,7 @@ class AcaoCorretiva extends Model
         return $query->where('responsavel_id', $usuario->id);
     }
 
-    /** Concluída dentro do prazo. */
+    /** Concluída dentro do prazo (indicador da Seção 6.6). */
     public function getConcluidaNoPrazoAttribute(): ?bool
     {
         if ($this->status !== StatusAcao::Concluida || $this->data_conclusao === null) {
@@ -93,14 +102,5 @@ class AcaoCorretiva extends Model
         }
 
         return $this->data_conclusao->lte($this->prazo);
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['titulo', 'status', 'responsavel_id', 'prazo', 'data_conclusao', 'eficacia'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('acao_corretiva');
     }
 }

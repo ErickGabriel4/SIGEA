@@ -317,14 +317,6 @@ return [
             'topnav_right' => true,
         ],
 
-        // ── Sidebar ────────────────────────────────────────────────────
-        [
-            'text' => 'Painel',
-            'route' => 'painel.index',
-            'icon' => 'fas fa-fw fa-chart-line',
-            'can' => 'dashboard.ver',
-        ],
-
         // ── Sidebar: Notificador ───────────────────────────────────────
         [
             'text' => 'Notificar Evento',
@@ -339,15 +331,30 @@ return [
             'can' => 'evento.ver_proprios',
         ],
         [
+            'text' => 'Minhas Ações',
+            'route' => 'acoes.minhas',
+            'icon' => 'fas fa-fw fa-tasks',
+            'can' => 'acao.executar',
+        ],
+
+        // ── Sidebar: Gestor de Segurança ───────────────────────────────
+        ['header' => 'GESTÃO DO NSP', 'can' => 'evento.ver_todos'],
+        [
+            'text' => 'Painel',
+            'route' => 'painel.index',
+            'icon' => 'fas fa-fw fa-chart-line',
+            'can' => 'dashboard.ver',
+        ],
+        [
             'text' => 'Eventos',
             'route' => 'eventos.index',
             'icon' => 'fas fa-fw fa-exclamation-triangle',
             'can' => 'evento.ver_todos',
         ],
         [
-            'text' => 'Triagem',
+            'text' => 'Fila de Triagem',
             'route' => 'triagem.index',
-            'icon' => 'fas fa-fw fa-clipboard-check',
+            'icon' => 'fas fa-fw fa-inbox',
             'can' => 'evento.triar',
         ],
         [
@@ -359,14 +366,8 @@ return [
         [
             'text' => 'Ações Corretivas',
             'route' => 'acoes.index',
-            'icon' => 'fas fa-fw fa-tasks',
+            'icon' => 'fas fa-fw fa-clipboard-check',
             'can' => 'acao.gerenciar',
-        ],
-        [
-            'text' => 'Minhas Ações',
-            'route' => 'acoes.minhas',
-            'icon' => 'fas fa-fw fa-list-check',
-            'can' => 'acao.executar',
         ],
         [
             'text' => 'Relatórios',
@@ -398,7 +399,7 @@ return [
         [
             'text' => 'Configurações',
             'route' => 'admin.configuracoes.index',
-            'icon' => 'fas fa-fw fa-sliders-h',
+            'icon' => 'fas fa-fw fa-cogs',
             'can' => 'configuracao.gerenciar',
         ],
         [

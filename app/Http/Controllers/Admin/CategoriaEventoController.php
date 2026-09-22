@@ -60,7 +60,7 @@ class CategoriaEventoController extends Controller
             ->with('sucesso', "Categoria {$categoria->codigo} atualizada.");
     }
 
-    /** Exclusão lógica; impedida quando em uso, a raiz leva junto as suas subcategorias. */
+    /** Exclusão lógica; impedida quando em uso. */
     public function destroy(CategoriaEvento $categoria)
     {
         $emUso = $categoria->eventos()->exists()

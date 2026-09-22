@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Validação de cadastro/edição de ação corretiva.
+ * Validação de cadastro/edição de ação corretiva (T15).
  */
 class AcaoCorretivaRequest extends FormRequest
 {

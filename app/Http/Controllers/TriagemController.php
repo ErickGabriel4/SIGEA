@@ -8,13 +8,14 @@ use App\Http\Requests\TriagemRequest;
 use App\Models\CategoriaEvento;
 use App\Models\Configuracao;
 use App\Models\EventoAdverso;
+use App\Notifications\EventoTransicionado;
 use App\Services\MatrizRiscoService;
 use App\Services\NotivisaService;
 use App\Services\WorkflowEventoService;
 use Illuminate\Http\Request;
 
 /**
- * Triagem e classificação dos eventos notificados (T09/T10).
+ * Triagem e classificação dos eventos notificados (T09/T10 — UC06/UC07/UC08).
  * Atende ao objetivo específico (e) do TCC.
  */
 class TriagemController extends Controller
@@ -96,6 +97,7 @@ class TriagemController extends Controller
 
         $evento->save();
 
+        // Categoria que exige investigação orienta o gestor na tela
         return back()->with('sucesso', 'Classificação salva. Escolha o encaminhamento do evento.');
     }
 
@@ -136,7 +138,7 @@ class TriagemController extends Controller
             ->with('sucesso', "Evento {$evento->protocolo} concluído na triagem.");
     }
 
-    /** Devolutiva ao notificante (combate à subnotificação). */
+    /** Devolutiva ao notificante (combate à subnotificação — UC14). */
     public function feedback(Request $request, EventoAdverso $evento)
     {
         $request->validate(
@@ -147,10 +149,14 @@ class TriagemController extends Controller
 
         $evento->update(['feedback_notificante' => $request->input('feedback_notificante')]);
 
-        return back()->with('sucesso', 'Devolutiva registrada.');
+        if (! $evento->anonima && $evento->notificante !== null) {
+            $evento->notificante->notify(new EventoTransicionado($evento, 'feedback'));
+        }
+
+        return back()->with('sucesso', 'Devolutiva registrada e enviada ao notificante.');
     }
 
-    /** Registra o protocolo NOTIVISA informado manualmente pelo gestor (UC22). */
+    /** Registra o protocolo NOTIVISA informado manualmente (UC22). */
     public function registrarNotivisa(Request $request, EventoAdverso $evento)
     {
         $request->validate(

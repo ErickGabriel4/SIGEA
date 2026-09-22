@@ -3,11 +3,6 @@
  * A base visual vem do AdminLTE 3 (Bootstrap) publicado em public/vendor.
  */
 
-/* Rodapé compacto do layout autenticado */
-.main-footer {
-    font-size: .85rem;
-}
-
 /* Badge laranja (nível de risco alto) — o AdminLTE só traz bg-orange em cards */
 .badge-orange {
     background-color: #fd7e14;
@@ -83,6 +78,17 @@
     min-width: 3rem;
 }
 
+.matriz-risco td.celula {
+    cursor: pointer;
+    font-weight: 700;
+    transition: transform .1s ease-in-out;
+}
+
+.matriz-risco td.celula:hover {
+    transform: scale(1.06);
+    outline: 2px solid #343a40;
+}
+
 .risco-baixo { background-color: #c3e6cb; color: #155724; }
 .risco-moderado { background-color: #ffeeba; color: #856404; }
 .risco-alto { background-color: #ffd8a8; color: #7f4f24; }
@@ -90,12 +96,6 @@
 
 .celula-selecionada {
     outline: 3px solid #343a40 !important;
-}
-
-/* Diagrama de Ishikawa */
-.diagrama-ishikawa {
-    width: 100%;
-    overflow-x: auto;
 }
 
 /* Indicador de prazo (bolinha verde/amarela/vermelha + texto) */
@@ -116,6 +116,12 @@
 .prazo-verde .ponto { background: #28a745; }
 .prazo-amarelo .ponto { background: #ffc107; }
 .prazo-vermelho .ponto { background: #dc3545; }
+
+/* Diagrama de Ishikawa */
+.diagrama-ishikawa {
+    width: 100%;
+    overflow-x: auto;
+}
 
 /* Timeline do histórico ganha respiro */
 .timeline {

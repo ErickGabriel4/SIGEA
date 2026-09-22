@@ -7,7 +7,8 @@ use App\Models\AcaoCorretiva;
 use Illuminate\Console\Command;
 
 /**
- * Job diário: marca como atrasada toda ação pendente/em andamento com prazo vencido.
+ * Job diário (06:00): marca como atrasada toda ação pendente/em andamento
+ * com prazo vencido (Seção 5.6 / US23).
  */
 class MarcarAcoesAtrasadas extends Command
 {

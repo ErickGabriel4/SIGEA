@@ -1,4 +1,4 @@
-{{-- T09 — Fila de triagem priorizada por tempo de espera --}}
+{{-- T09 — Fila de triagem priorizada por tempo de espera (UC06) --}}
 @extends('layouts.app')
 
 @section('title', 'Fila de Triagem · SIGEA')

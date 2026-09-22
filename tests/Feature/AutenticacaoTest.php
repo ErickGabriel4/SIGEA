@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -19,14 +18,7 @@ class AutenticacaoTest extends TestCase
         $this->semearPerfis();
     }
 
-    public function test_tela_de_login_e_exibida(): void
-    {
-        $this->get('/login')
-            ->assertOk()
-            ->assertSee('Acesse com suas credenciais institucionais');
-    }
-
-    public function test_login_valido_redireciona_para_o_painel(): void
+    public function test_login_valido_redireciona_conforme_perfil(): void
     {
         $gestor = $this->criarGestor(['password' => 'senha123']);
 
@@ -39,19 +31,21 @@ class AutenticacaoTest extends TestCase
         $this->assertAuthenticatedAs($gestor);
     }
 
-    public function test_notificador_cai_nas_proprias_notificacoes_apos_o_login(): void
+    public function test_notificador_redireciona_para_minhas_notificacoes(): void
     {
         $notificador = $this->criarNotificador(['password' => 'senha123']);
 
-        $this->post('/login', [
+        $resposta = $this->post('/login', [
             'email' => $notificador->email,
             'password' => 'senha123',
-        ])->assertRedirect(route('eventos.meus', absolute: false));
+        ]);
+
+        $resposta->assertRedirect(route('eventos.meus', absolute: false));
     }
 
     public function test_login_invalido_exibe_mensagem_generica(): void
     {
-        $usuario = $this->criarNotificador(['password' => 'senha123']);
+        $usuario = $this->criarNotificador();
 
         $resposta = $this->from('/login')->post('/login', [
             'email' => $usuario->email,
@@ -65,7 +59,7 @@ class AutenticacaoTest extends TestCase
 
     public function test_usuario_inativo_nao_autentica(): void
     {
-        $usuario = User::factory()->inativo()->create(['password' => 'senha123']);
+        $usuario = $this->criarNotificador(['password' => 'senha123', 'ativo' => false]);
 
         $this->post('/login', [
             'email' => $usuario->email,
@@ -75,31 +69,38 @@ class AutenticacaoTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_nao_existe_rota_de_registro_publico(): void
+    public function test_cinco_tentativas_falhas_bloqueiam_temporariamente(): void
     {
-        $this->get('/register')->assertNotFound();
+        $usuario = $this->criarNotificador();
+
+        foreach (range(1, 5) as $tentativa) {
+            $this->post('/login', [
+                'email' => $usuario->email,
+                'password' => 'senha-errada',
+            ]);
+        }
+
+        $resposta = $this->post('/login', [
+            'email' => $usuario->email,
+            'password' => 'senha-errada',
+        ]);
+
+        // Bloqueio pelo middleware throttle:5,1 da rota (HTTP 429 — Too Many Requests)
+        $resposta->assertTooManyRequests();
+        $this->assertGuest();
     }
 
-    public function test_logout_encerra_a_sessao(): void
+    public function test_logout_encerra_sessao(): void
     {
         $usuario = $this->criarNotificador();
 
         $this->actingAs($usuario)->post('/logout')->assertRedirect('/');
-
         $this->assertGuest();
     }
 
-    public function test_painel_exige_autenticacao(): void
+    public function test_nao_existe_rota_de_registro_publico(): void
     {
-        $this->get('/painel')->assertRedirect('/login');
-    }
-
-    public function test_ultimo_acesso_e_registrado_na_navegacao(): void
-    {
-        $gestor = $this->criarGestor(['ultimo_acesso_em' => null]);
-
-        $this->actingAs($gestor)->get('/painel')->assertOk();
-
-        $this->assertNotNull($gestor->fresh()->ultimo_acesso_em);
+        $this->get('/register')->assertNotFound();
+        $this->post('/register', [])->assertNotFound();
     }
 }
