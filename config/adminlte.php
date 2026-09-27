@@ -408,6 +408,16 @@ return [
             'icon' => 'fas fa-fw fa-history',
             'can' => 'auditoria.ver',
         ],
+
+        // ── Sidebar: Sair (sempre o último item; POST via form em layouts/app) ──
+        ['header' => ''],
+        [
+            'text' => 'Sair',
+            'url' => '#',
+            'id' => 'menu-sair',
+            'icon' => 'fas fa-fw fa-sign-out-alt',
+            'icon_color' => 'danger',
+        ],
     ],
 
     /*

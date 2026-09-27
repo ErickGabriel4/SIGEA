@@ -45,6 +45,19 @@
     @yield('conteudo')
 @endsection
 
+{{-- Logout exige POST: o item "Sair" da sidebar submete este formulário --}}
+@push('js')
+    <form id="form-sair" action="{{ route('logout') }}" method="POST" class="d-none">
+        @csrf
+    </form>
+    <script>
+        document.querySelector('#menu-sair a')?.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.getElementById('form-sair').submit();
+        });
+    </script>
+@endpush
+
 @section('footer')
     <div class="d-flex justify-content-between small">
         <span>
