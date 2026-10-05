@@ -13,7 +13,7 @@
     <div class="card card-outline card-primary">
         <div class="card-header text-center">
             <span class="h1"><b>SIG</b>EA</span>
-            <p class="mb-0 text-muted small">Sistema Integrado de Gestão de Eventos Adversos</p>
+            <p class="mb-0 text-muted small">Sistema de Gestão de Eventos Adversos</p>
             <p class="mb-0 text-muted small">IFSP — Câmpus Campinas · Segurança do Paciente</p>
         </div>
         <div class="card-body">

@@ -1,4 +1,4 @@
-# SIGEA — Sistema Integrado de Gestão de Eventos Adversos
+# SIGEA — Sistema de Gestão de Eventos Adversos
 
 Plataforma web para registro, classificação, investigação e análise de eventos adversos
 hospitalares — ferramenta de apoio à segurança do paciente.

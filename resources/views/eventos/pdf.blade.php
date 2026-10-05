@@ -106,7 +106,7 @@
     </table>
 
     <div class="rodape">
-        SIGEA — Sistema Integrado de Gestão de Eventos Adversos · Documento gerado com dados exclusivamente simulados ·
+        SIGEA — Sistema de Gestão de Eventos Adversos · Documento gerado com dados exclusivamente simulados ·
         TCC IFSP Câmpus Campinas
     </div>
 </body>

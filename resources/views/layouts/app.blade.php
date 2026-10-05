@@ -61,7 +61,7 @@
 @section('footer')
     <div class="d-flex justify-content-between small">
         <span>
-            <strong>SIGEA</strong> — Sistema Integrado de Gestão de Eventos Adversos · v1.0
+            <strong>SIGEA</strong> — Sistema de Gestão de Eventos Adversos · v1.0
         </span>
         <span>
             TCC — Tecnologia em Análise e Desenvolvimento de Sistemas · IFSP Câmpus Campinas · Dados exclusivamente simulados

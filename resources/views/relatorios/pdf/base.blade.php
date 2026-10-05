@@ -30,7 +30,7 @@
     @yield('corpo')
 
     <div class="rodape">
-        SIGEA — Sistema Integrado de Gestão de Eventos Adversos · Dados exclusivamente simulados · TCC IFSP Câmpus Campinas
+        SIGEA — Sistema de Gestão de Eventos Adversos · Dados exclusivamente simulados · TCC IFSP Câmpus Campinas
     </div>
 </body>
 </html>
