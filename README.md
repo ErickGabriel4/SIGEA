@@ -126,16 +126,6 @@ Depois execute:
 php artisan test        # 110 testes / 384 asserções
 ```
 
-## Comandos úteis
-
-```bash
-php artisan migrate:fresh --seed           # recria o banco do zero com a massa simulada
-php artisan sigea:marcar-acoes-atrasadas   # marca ações vencidas como atrasadas
-php artisan sigea:alertar-prazos           # alertas de prazo (ações e eventos)
-php artisan sigea:resumo-semanal           # resumo de indicadores aos gestores
-npm run dev                                # Vite em modo de desenvolvimento (hot reload)
-```
-
 ## Solução de problemas
 
 | Sintoma | Causa / solução |
