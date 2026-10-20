@@ -160,6 +160,3 @@ Toda a documentação técnica está em [`docs/`](docs/):
 - [`AVALIACAO_HEURISTICA.md`](docs/AVALIACAO_HEURISTICA.md) — usabilidade (Nielsen)
 - [`adr/`](docs/adr/) — decisões arquiteturais registradas
 
-## Licença
-
-Projeto acadêmico de código aberto (MIT), desenvolvido para fins de pesquisa e ensino.
