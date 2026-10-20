@@ -130,10 +130,9 @@ php artisan test        # 110 testes / 384 asserções
 
 | Sintoma | Causa / solução |
 |---|---|
-| `Specified key was too long (1000 bytes)` ao migrar | MySQL com engine padrão MyISAM (comum no WAMP). O projeto já força InnoDB em `config/database.php`; atualize o código ou confira essa configuração. |
 | Gráficos não aparecem no painel | Assets não compilados — rode `npm install && npm run build`. |
 | E-mails não chegam | Em desenvolvimento `MAIL_MAILER=log` (mensagens vão para `storage/logs/laravel.log`). Em produção configure SMTP no `.env`. |
-| Testes falham com "Unknown database" | Crie o banco `sigea_teste` (passo da seção de testes). |
+| Testes falham com "Unknown database" | Crie o banco `sigea_teste` . |
 
 ## Stack
 
