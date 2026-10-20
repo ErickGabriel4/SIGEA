@@ -9,7 +9,7 @@ hospitalares — ferramenta de apoio à segurança do paciente.
 > Carlos Rodrigues.
 >
 > ⚠️ **O sistema opera exclusivamente com dados simulados.** Nenhum dado real de paciente é
-> armazenado; identificadores são pseudonimizados (ver `docs/adr/0001-pseudonimizacao.md`).
+> armazenado; identificadores são pseudonimizados.
 
 ---
 
